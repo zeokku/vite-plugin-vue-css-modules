@@ -94,7 +94,10 @@ const transform = (source: string, { preservePrefix }: TransformOptions) => {
           case "v-bind:id":
             //"id" -> remove quotes "
             idName = `$style[${attr.val.slice(1, -1)}]`;
+            break;
 
+          case ":--id":
+            idName = attr.val.slice(1, -1);
             break;
 
           default:
@@ -112,6 +115,7 @@ const transform = (source: string, { preservePrefix }: TransformOptions) => {
               "id",
               ":id",
               "v-bind:id",
+              ":--id",
             ].includes(a.name)
         );
 
