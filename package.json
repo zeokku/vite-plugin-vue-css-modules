@@ -1,0 +1,16 @@
+{
+  "name": "rollup-plugin-vue-picm",
+  "version": "1.0.0",
+  "description": "Rollup/Vite plugin for implicit usage of CSS modules in Vue Pug templates",
+  "keywords": [
+    "rollup-plugin",
+    "vite-plugin",
+    "optimization",
+    "minimization",
+    "vue",
+    "pug"
+  ],
+  "main": "dist/index.js",
+  "author": "Lutymane",
+  "license": "MIT"
+}
