@@ -1,16 +1,32 @@
 {
-  "name": "rollup-plugin-vue-picm",
+  "name": "vite-plugin-vue-picm",
   "version": "1.0.0",
-  "description": "Rollup/Vite plugin for implicit usage of CSS modules in Vue Pug templates",
+  "description": "Vite plugin for implicit usage of CSS modules in Vue Pug templates",
   "keywords": [
-    "rollup-plugin",
     "vite-plugin",
     "optimization",
     "minimization",
     "vue",
     "pug"
   ],
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
   "main": "dist/index.js",
+  "type": "module",
   "author": "Lutymane",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^16.4.0",
+    "pug": "^3.0.2",
+    "typescript": "^4.3.5",
+    "vite": "^2.4.3"
+  },
+  "dependencies": {
+    "incstr": "^1.2.3"
+  },
+  "peerDependencies": {
+    "pug": "^3.0.2"
+  }
 }

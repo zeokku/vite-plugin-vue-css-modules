@@ -1,5 +1,5 @@
-# rollup-plugin-vue-picm
+# vite-plugin-vue-picm
 
-Rollup/Vite plugin for implicit usage of CSS modules in Vue Pug templates
+Vite plugin for implicit usage of CSS modules in Vue Pug templates
 
 PICM = Pug Implicit CSS Modules
