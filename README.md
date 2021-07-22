@@ -4,9 +4,9 @@ Vite plugin for implicit usage of CSS modules inside of Vue SFC Pug templates
 
 PICM = Pug Implicit CSS Modules
 
-This plugin is a port of original [vue-cli plugin](https://github.com/zeokku/vue-cli-plugin-pug-with-css-modules) with a bunch of additions and tweaks (eventually I'll add them for the original one as well)
+This plugin is a port of original vue-cli [plugin](https://github.com/zeokku/vue-cli-plugin-pug-with-css-modules) with a bunch of additions and tweaks (eventually I'll add them for the original one as well)
 
-Implicit usage of CSS modules means you may write your Pug templates as usual without having to type $style['...'] manually every time (see example below)
+Implicit usage of CSS modules means you may write your Pug templates as usual without having to type `$style['...']` manually every time (see example below)
 
 ## Installation
 
@@ -91,7 +91,7 @@ The plugin processes pug and transforms class and id attributes to use $style an
 
 ## Edge cases
 
-Sometimes it's needed to preserve id/class names. In this scenario use `--` as a prefix to preserve the name (Or you can select your own prefix using plugin options)
+Sometimes it's needed to preserve id/class names. In this scenario use `--` as a prefix to keep the name (Or you can select your own prefix using plugin options)
 
 **ID Example:**
 
