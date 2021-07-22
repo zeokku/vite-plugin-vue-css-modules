@@ -34,7 +34,7 @@ Notice that the plugin should go **BEFORE** vue() plugin, so it could transform 
 
 (If you get errors regarding ESM importing, make sure to use "type": "module" in your project's package.json)
 
-Don't forget to use `module` attribute and remove `scoped`
+Don't forget to use `module` attribute and remove `scoped` in your <style> blocks
 
 By default the plugin generates COMPONENT\_\_CLASSNAME values in development and minimized names during `vite build`
 
