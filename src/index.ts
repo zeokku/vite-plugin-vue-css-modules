@@ -5,11 +5,11 @@ import wrap from "pug-runtime/wrap.js";
 
 import transform from "./transform.js";
 import {
-  devNameGenerator,
-  nameGeneratorContext,
-} from "./nameGeneratorContext.js";
+  devNameGeneratorContext,
+  prodNameGeneratorContext,
+} from "./nameGenerators.js";
 
-//@todo parse5 to parse html
+//@todo parse5 to parse html?
 //https://lihautan.com/manipulating-ast-with-javascript/
 
 interface PluginOptions {
@@ -21,6 +21,7 @@ interface PluginOptions {
   pugOptions: any;
 }
 
+//@todo or switch to command === "build" ?
 const debug = process.env.NODE_ENV !== "production";
 
 function plugin({
@@ -61,7 +62,9 @@ function plugin({
 
       if (!options.generateScopedName) {
         options.generateScopedName =
-          command === "build" ? nameGeneratorContext() : devNameGenerator;
+          command === "build"
+            ? prodNameGeneratorContext()
+            : devNameGeneratorContext();
         //command === "build" ? nameGeneratorContext() : "[name]__[local]";
       }
     },
@@ -102,4 +105,7 @@ function plugin({
 }
 
 export { plugin, PluginOptions };
-export { nameGeneratorContext } from "./nameGeneratorContext.js";
+export {
+  prodNameGeneratorContext,
+  devNameGeneratorContext,
+} from "./nameGenerators.js";

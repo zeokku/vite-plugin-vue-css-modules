@@ -1,7 +1,7 @@
 import incstr from "incstr";
-import path from "path/posix";
+import path from "path";
 
-const nameGeneratorContext = () => {
+const prodNameGeneratorContext = () => {
   let namesMap = {};
 
   //move dash to the end to optimize name generation
@@ -36,12 +36,10 @@ const nameGeneratorContext = () => {
   };
 };
 
-const devNameGenerator = (
-  name: string,
-  filename: string,
-  css: string
-): string => {
-  return path.basename(filename).split(".")[0] + "__" + name;
+const devNameGeneratorContext = () => {
+  return (name: string, filename: string, css: string): string => {
+    return path.basename(filename).split(".")[0] + "__" + name;
+  };
 };
 
-export { nameGeneratorContext, devNameGenerator };
+export { prodNameGeneratorContext, devNameGeneratorContext };

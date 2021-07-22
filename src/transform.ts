@@ -2,7 +2,7 @@ import lex from "pug-lexer";
 import parse from "pug-parser";
 import walk from "pug-walk";
 
-const classObjParse = (classObjString: string): string[] => {
+const parseClassObject = (classObjString: string): string[] => {
   let result: string[] = [];
 
   //remove {} and split entries
@@ -65,7 +65,7 @@ const transform = (source: string, { preservePrefix }: TransformOptions) => {
                 .split(/\s*,\s*/)
                 .forEach((e) => {
                   if (e.startsWith("{")) {
-                    classes = classes.concat(classObjParse(e));
+                    classes = classes.concat(parseClassObject(e));
                   } else {
                     classes.push(`$style[${e}]`);
                   }
@@ -73,7 +73,7 @@ const transform = (source: string, { preservePrefix }: TransformOptions) => {
             }
             //{class1, class2: var}
             else if (c.startsWith("{")) {
-              classes = classes.concat(classObjParse(c));
+              classes = classes.concat(parseClassObject(c));
             }
             // var, x ? y : z
             else {
@@ -96,7 +96,7 @@ const transform = (source: string, { preservePrefix }: TransformOptions) => {
             idName = `$style[${attr.val.slice(1, -1)}]`;
             break;
 
-          case ":--id":
+          case `:${preservePrefix}id`:
             idName = attr.val.slice(1, -1);
             break;
 
@@ -115,7 +115,7 @@ const transform = (source: string, { preservePrefix }: TransformOptions) => {
               "id",
               ":id",
               "v-bind:id",
-              ":--id",
+              `:${preservePrefix}id`,
             ].includes(a.name)
         );
 
@@ -131,6 +131,7 @@ const transform = (source: string, { preservePrefix }: TransformOptions) => {
         }
 
         if (idName) {
+          //don't forget first is "id", second is ":id", cuz bruh i "optimized" this thing like 3 times forgetting about the difference o.o
           if (idName.startsWith(preservePrefix)) {
             finalAttrs.unshift({
               name: "id",

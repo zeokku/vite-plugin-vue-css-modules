@@ -1,0 +1,8 @@
+node_modules
+src
+.gitignore
+tests
+notes.md
+tsconfig.json
+yarn.lock
+yarn-error.log
