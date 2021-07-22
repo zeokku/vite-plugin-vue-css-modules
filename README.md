@@ -1,3 +1,8 @@
+[![npm](https://img.shields.io/npm/v/vite-plugin-vue-picm?color=pink&style=flat-square)](https://www.npmjs.com/package/vue-cli-plugin-pug-with-css-modules)
+[![npm](https://img.shields.io/npm/dw/vite-plugin-vue-picm?color=pink&style=flat-square)](https://www.npmjs.com/package/vue-cli-plugin-pug-with-css-modules)
+[![Discord](https://img.shields.io/discord/405510915845390347?color=pink&label=join%20discord&style=flat-square)](https://zeokku.com/discord)
+
+
 # vite-plugin-vue-picm
 
 Vite plugin for implicit usage of CSS modules inside of Vue SFC Pug templates
