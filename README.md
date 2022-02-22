@@ -1,13 +1,10 @@
-[![npm](https://img.shields.io/npm/v/vite-plugin-vue-picm?color=pink&style=flat-square)](https://www.npmjs.com/package/vite-plugin-vue-picm)
-[![npm](https://img.shields.io/npm/dw/vite-plugin-vue-picm?color=pink&style=flat-square)](https://www.npmjs.com/package/vite-plugin-vue-picm)
+[![npm](https://img.shields.io/npm/v/vite-plugin-vue-pug-with-css-modules?color=pink&style=flat-square)](https://www.npmjs.com/package/vite-plugin-vue-pug-with-css-modules)
+[![npm](https://img.shields.io/npm/dw/vite-plugin-vue-pug-with-css-modules?color=pink&style=flat-square)](https://www.npmjs.com/package/vite-plugin-vue-pug-with-css-modules)
 [![Discord](https://img.shields.io/discord/405510915845390347?color=pink&label=join%20discord&style=flat-square)](https://zeokku.com/discord)
 
-
-# vite-plugin-vue-picm
+# vite-plugin-vue-pug-with-css-modules
 
 Vite plugin for implicit usage of CSS modules inside of Vue SFC Pug templates
-
-PICM = Pug Implicit CSS Modules
 
 This plugin is a port of original vue-cli [plugin](https://github.com/zeokku/vue-cli-plugin-pug-with-css-modules) with a bunch of additions and tweaks (eventually I'll add them for the original one as well)
 
@@ -16,13 +13,13 @@ Implicit usage of CSS modules means you may write your Pug templates as usual wi
 ## Installation
 
 ```
-yarn add -D vite-plugin-vue-picm
+yarn add -D vite-plugin-vue-pug-with-css-modules
 ```
 
 In `vite.config.ts`:
 
 ```javascript
-import { plugin as picm } from "vite-plugin-vue-picm";
+import { plugin as picm } from "vite-plugin-vue-pug-with-css-modules";
 
 export default defineConfig({
     plugins: [picm(), vue(), ...],
@@ -32,9 +29,9 @@ export default defineConfig({
 
 Notice that the plugin should go **BEFORE** vue() plugin, so it could transform templates
 
-(If you get errors regarding ESM importing, make sure to use "type": "module" in your project's package.json)
+(If you get errors regarding ESM importing, make sure to use `"type": "module"` in your project's package.json)
 
-Don't forget to use `module` attribute and remove `scoped` in your <style> blocks
+Don't forget to use `module` attribute and remove `scoped` in your <style\> blocks
 
 By default the plugin generates COMPONENT\_\_CLASSNAME values in development and minimized names during `vite build`
 
