@@ -1,7 +1,7 @@
 import generateCode from "pug-code-gen";
 import wrap from "pug-runtime/wrap.js";
 import transform from "./transform.js";
-import { devNameGeneratorContext, prodNameGeneratorContext, } from "./nameGenerators.js";
+import { devNameGeneratorContext, prodNameGeneratorContext } from "./nameGenerators.js";
 const debug = process.env.NODE_ENV !== "production";
 function plugin({ preservePrefix = "--", scopeBehaviour = "local", pugLocals: optionsLocals = {}, pugOptions = {}, } = {}) {
     let locals = {
@@ -14,7 +14,7 @@ function plugin({ preservePrefix = "--", scopeBehaviour = "local", pugLocals: op
         compileDebug: debug,
     };
     return {
-        name: "vue-pug-implicit-css-modules",
+        name: "Vue Pug with Implicit CSS Modules",
         config(config, { command }) {
             if (!config.css) {
                 config.css = {};
@@ -28,9 +28,7 @@ function plugin({ preservePrefix = "--", scopeBehaviour = "local", pugLocals: op
             }
             if (!options.generateScopedName) {
                 options.generateScopedName =
-                    command === "build"
-                        ? prodNameGeneratorContext()
-                        : devNameGeneratorContext();
+                    command === "build" ? prodNameGeneratorContext() : devNameGeneratorContext();
             }
         },
         transform(code, id) {
@@ -44,9 +42,7 @@ function plugin({ preservePrefix = "--", scopeBehaviour = "local", pugLocals: op
                 let funcStr = generateCode(ast, pugOptions);
                 let template = wrap(funcStr);
                 let htmlTemplateCode = template(locals);
-                let output = code
-                    .replace(templateCodeRegex, htmlTemplateCode)
-                    .replace('lang="pug"', "");
+                let output = code.replace(templateCodeRegex, htmlTemplateCode).replace('lang="pug"', "");
                 return output;
             }
             return null;
@@ -54,4 +50,4 @@ function plugin({ preservePrefix = "--", scopeBehaviour = "local", pugLocals: op
     };
 }
 export { plugin };
-export { prodNameGeneratorContext, devNameGeneratorContext, } from "./nameGenerators.js";
+export { prodNameGeneratorContext, devNameGeneratorContext };

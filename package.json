@@ -1,6 +1,6 @@
 {
-  "name": "vite-plugin-vue-picm",
-  "version": "1.0.0",
+  "name": "vite-plugin-vue-pug-with-css-modules",
+  "version": "1.0.1",
   "description": "Vite plugin for implicit usage of CSS modules in Vue SFC Pug templates",
   "scripts": {
     "build": "tsc",
@@ -11,7 +11,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zeokku/vite-plugin-vue-picm.git"
+    "url": "git+https://github.com/zeokku/vite-plugin-vue-pug-with-css-modules.git"
   },
   "keywords": [
     "vite-plugin",
@@ -38,7 +38,7 @@
   },
   "author": "Lutymane <luty@zeokku.com>",
   "bugs": {
-    "url": "https://github.com/zeokku/vite-plugin-vue-picm/issues"
+    "url": "https://github.com/zeokku/vite-plugin-vue-pug-with-css-modules/issues"
   },
-  "homepage": "https://github.com/zeokku/vite-plugin-vue-picm#readme"
+  "homepage": "https://github.com/zeokku/vite-plugin-vue-pug-with-css-modules#readme"
 }

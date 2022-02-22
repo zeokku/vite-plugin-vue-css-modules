@@ -4,10 +4,7 @@ import generateCode from "pug-code-gen";
 import wrap from "pug-runtime/wrap.js";
 
 import transform from "./transform.js";
-import {
-  devNameGeneratorContext,
-  prodNameGeneratorContext,
-} from "./nameGenerators.js";
+import { devNameGeneratorContext, prodNameGeneratorContext } from "./nameGenerators.js";
 
 //@todo parse5 to parse html?
 //https://lihautan.com/manipulating-ast-with-javascript/
@@ -42,7 +39,7 @@ function plugin({
   };
 
   return {
-    name: "vue-pug-implicit-css-modules",
+    name: "Vue Pug with Implicit CSS Modules",
 
     //patch config with css module options
     config(config: UserConfig, { command }) {
@@ -62,9 +59,7 @@ function plugin({
 
       if (!options.generateScopedName) {
         options.generateScopedName =
-          command === "build"
-            ? prodNameGeneratorContext()
-            : devNameGeneratorContext();
+          command === "build" ? prodNameGeneratorContext() : devNameGeneratorContext();
         //command === "build" ? nameGeneratorContext() : "[name]__[local]";
       }
     },
@@ -92,9 +87,7 @@ function plugin({
         //template({locals}), locals are vars referenced by using #{var} in pug src | { var: 'bob' }
         let htmlTemplateCode = template(locals);
 
-        let output = code
-          .replace(templateCodeRegex, htmlTemplateCode)
-          .replace('lang="pug"', "");
+        let output = code.replace(templateCodeRegex, htmlTemplateCode).replace('lang="pug"', "");
 
         return output;
       }
@@ -105,7 +98,4 @@ function plugin({
 }
 
 export { plugin, PluginOptions };
-export {
-  prodNameGeneratorContext,
-  devNameGeneratorContext,
-} from "./nameGenerators.js";
+export { prodNameGeneratorContext, devNameGeneratorContext };
