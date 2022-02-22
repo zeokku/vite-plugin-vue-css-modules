@@ -1,3 +1,8 @@
+[![npm](https://img.shields.io/npm/v/vite-plugin-vue-picm?color=pink&style=flat-square)](https://www.npmjs.com/package/vite-plugin-vue-picm)
+[![npm](https://img.shields.io/npm/dw/vite-plugin-vue-picm?color=pink&style=flat-square)](https://www.npmjs.com/package/vite-plugin-vue-picm)
+[![Discord](https://img.shields.io/discord/405510915845390347?color=pink&label=join%20discord&style=flat-square)](https://zeokku.com/discord)
+
+
 # vite-plugin-vue-picm
 
 Vite plugin for implicit usage of CSS modules inside of Vue SFC Pug templates
@@ -29,7 +34,7 @@ Notice that the plugin should go **BEFORE** vue() plugin, so it could transform 
 
 (If you get errors regarding ESM importing, make sure to use "type": "module" in your project's package.json)
 
-Don't forget to use `module` attribute and remove `scoped`
+Don't forget to use `module` attribute and remove `scoped` in your <style> blocks
 
 By default the plugin generates COMPONENT\_\_CLASSNAME values in development and minimized names during `vite build`
 
