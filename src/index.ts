@@ -90,5 +90,18 @@ function plugin({
   // @todo satisfies Plugin;
 }
 
-export { plugin, PluginOptions };
-export { prodNameGeneratorContext, devNameGeneratorContext };
+export {
+  plugin as default, //
+  plugin,
+  PluginOptions,
+};
+
+export {
+  prodNameGeneratorContext, //
+  devNameGeneratorContext,
+};
+
+export {
+  removeCssModulesChunk, //
+  TRemoveCssModulesChunkOptions,
+} from "./removeCssModulesChunk.js";
