@@ -13,3 +13,7 @@ div(:class='"class5"')
 div(:class="v ? 'class6' : `class7`")
 div(:class="v0 ? 'class8' : v1 ? 'class9' : v2 ? 'class10' :'class11'")
 div(:class="v0 ? varClass0 : varClass1") This won't be processed
+.--escaped0 
+#--escaped1 
+div(:--class="someRawVar")
+div(:--id="someRawVar2")
