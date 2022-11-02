@@ -1,3 +1,7 @@
+dist
+test/ast.json
+test/result.html
+
 # Logs
 logs
 *.log

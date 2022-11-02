@@ -3,7 +3,7 @@ import { Plugin, UserConfig, CSSModulesOptions } from "vite";
 import generateCode from "pug-code-gen";
 import wrap from "pug-runtime/wrap.js";
 
-import transform from "./transform.js";
+import { transform } from "./transform2.js";
 import { devNameGeneratorContext, prodNameGeneratorContext } from "./nameGenerators.js";
 
 //@todo parse5 to parse html?
@@ -16,32 +16,28 @@ interface PluginOptions {
     [name: string]: string;
   };
   pugOptions: any;
+  nameGenerator: Exclude<CSSModulesOptions["generateScopedName"], string>;
 }
 
 //@todo or switch to command === "build" ?
-const debug = process.env.NODE_ENV !== "production";
+const dev = process.env.NODE_ENV !== "production";
 
 function plugin({
   preservePrefix = "--",
   scopeBehaviour = "local",
-  pugLocals: optionsLocals = {},
+  pugLocals = {},
   pugOptions = {},
-}: Partial<PluginOptions> = {}): Plugin {
-  let locals = {
-    debug,
-    ...optionsLocals,
-  };
+  nameGenerator = dev ? devNameGeneratorContext() : prodNameGeneratorContext(),
+}: Partial<PluginOptions> = {}) {
+  Object.assign(pugLocals, { dev });
 
-  pugOptions = {
-    ...pugOptions,
-    doctype: "html",
-    compileDebug: debug,
-  };
+  Object.assign(pugOptions, { doctype: "html", compileDebug: dev });
 
   return {
     name: "Vue Pug with Implicit CSS Modules",
 
-    //patch config with css module options
+    // patch config with css module options
+    // this is called only once (or when config file changes)
     config(config: UserConfig, { command }) {
       if (!config.css) {
         config.css = {};
@@ -58,9 +54,7 @@ function plugin({
       }
 
       if (!options.generateScopedName) {
-        options.generateScopedName =
-          command === "build" ? prodNameGeneratorContext() : devNameGeneratorContext();
-        //command === "build" ? nameGeneratorContext() : "[name]__[local]";
+        options.generateScopedName = nameGenerator;
       }
     },
 
@@ -71,30 +65,29 @@ function plugin({
           return null;
         }
 
-        let templateCodeRegex =
-          /(?<=<template\s+lang="pug">[\r\n]+)[^]*?(?=[\r\n]+<\/template>)/gim;
+        return code.replace(/<template.*>[\r\n]+([^]+)<\/template>/, (_, templateCode) => {
+          let ast = transform(templateCode, {
+            preservePrefix,
+            nameGenerator: (name: string) => nameGenerator(name, id, ""),
+          });
 
-        let templateCode = templateCodeRegex.exec(code)[0];
+          //generate template function string
+          let funcStr = generateCode(ast, pugOptions);
 
-        let ast = transform(templateCode, { preservePrefix });
+          //generate template function
+          let template = wrap(funcStr);
 
-        //generate template function string
-        let funcStr = generateCode(ast, pugOptions);
+          //template({locals}), locals are vars referenced by using #{var} in pug src | { var: 'bob' }
+          let htmlTemplateCode = template(pugLocals);
 
-        //generate template function
-        let template = wrap(funcStr);
-
-        //template({locals}), locals are vars referenced by using #{var} in pug src | { var: 'bob' }
-        let htmlTemplateCode = template(locals);
-
-        let output = code.replace(templateCodeRegex, htmlTemplateCode).replace('lang="pug"', "");
-
-        return output;
+          return [`<template>`, htmlTemplateCode, `</template>`].join("\n");
+        });
       }
 
       return null;
     },
   };
+  // @todo satisfies Plugin;
 }
 
 export { plugin, PluginOptions };

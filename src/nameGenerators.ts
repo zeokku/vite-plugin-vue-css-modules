@@ -1,8 +1,13 @@
 import incstr from "incstr";
 import path from "path";
 
-const prodNameGeneratorContext = () => {
-  let namesMap = {};
+import type { PluginOptions } from ".";
+
+// filename
+// C:/.../src/views/About.vue?vue&type=style&index=0&lang.module.less
+
+const prodNameGeneratorContext = (): PluginOptions["nameGenerator"] => {
+  let namesMap: Record<string, string> = {};
 
   //move dash to the end to optimize name generation
   let generateName = incstr.idGenerator({
@@ -10,7 +15,7 @@ const prodNameGeneratorContext = () => {
   });
 
   //the function is called for each CSS rule, so cache the pairs of minified name with og name
-  return (name: string, filename: string, css: string): string => {
+  return (name, filename) => {
     //split path by /src/
     //let pathParts = filepath.split(/[\/\\]src[\/\\]|/g);
 
@@ -22,22 +27,25 @@ const prodNameGeneratorContext = () => {
 
     if (namesMap[key]) return namesMap[key];
 
-    let newName = generateName();
+    let newName;
 
-    //hypen prefixes are reserved for vendor classes, also it can't start with a digit
-    //in addition exclude ^ad or any _ad, -ad constructions to avoid adblock problem
-    while (/^[-\d]|(?:[-_]+|^)ad/.test(newName)) {
+    do {
       newName = generateName();
-    }
+    } while (
+      //hyphen prefixes are reserved for vendor classes, also it can't start with a digit
+      //in addition exclude ^ad or any _ad, -ad constructions to avoid adblock problem
+      /^[-\d]|(?:[-_]+|^)ad/.test(newName)
+    );
 
     namesMap[key] = newName;
 
     return newName;
   };
+  // @todo satisfies PluginOptions['nameGenerator'];
 };
 
-const devNameGeneratorContext = () => {
-  return (name: string, filename: string, css: string): string => {
+const devNameGeneratorContext = (): PluginOptions["nameGenerator"] => {
+  return (name, filename) => {
     return path.basename(filename).split(".")[0] + "__" + name;
   };
 };
