@@ -1,4 +1,4 @@
-import { Plugin, UserConfig, CSSModulesOptions } from "vite";
+import { Plugin, CSSModulesOptions } from "vite";
 
 import generateCode from "pug-code-gen";
 import wrap from "pug-runtime/wrap.js";
@@ -28,7 +28,7 @@ function plugin({
   pugLocals = {},
   pugOptions = {},
   nameGenerator = dev ? devNameGeneratorContext() : prodNameGeneratorContext(),
-}: Partial<PluginOptions> = {}) {
+}: Partial<PluginOptions> = {}): Plugin {
   Object.assign(pugLocals, { dev });
 
   Object.assign(pugOptions, { doctype: "html", compileDebug: dev });
@@ -38,7 +38,7 @@ function plugin({
 
     // patch config with css module options
     // this is called only once (or when config file changes)
-    config(config: UserConfig, { command }) {
+    config(config) {
       if (!config.css) {
         config.css = {};
       }

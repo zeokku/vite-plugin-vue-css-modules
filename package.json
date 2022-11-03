@@ -1,7 +1,7 @@
 {
   "name": "vite-plugin-vue-pug-with-css-modules",
   "version": "2.0.0",
-  "description": "Vite plugin for implicit usage of CSS modules in Vue Pug templates",
+  "description": "Automatic static CSS modules replacement for Vue Pug templates",
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch"
