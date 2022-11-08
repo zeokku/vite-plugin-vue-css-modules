@@ -3,7 +3,7 @@ import wrap from "pug-runtime/wrap.js";
 
 import { readFileSync, writeFileSync } from "fs";
 
-import { transform } from "../dist/transform2.js";
+import { transform } from "../dist/transform3.js";
 
 let preservePrefix = "--";
 let nameGenerator = name => "TEST__" + name;
