@@ -1,23 +1,13 @@
-import generateCode from "pug-code-gen";
-import wrap from "pug-runtime/wrap.js";
-
 import { readFileSync, writeFileSync } from "fs";
 
-import { transform } from "../dist/transform3.js";
+import pluginFactory from "../dist/index.js";
 
-let preservePrefix = "--";
 let nameGenerator = name => "TEST__" + name;
+
+const plugin = pluginFactory({ nameGenerator });
 
 let testVue = readFileSync("./test/test.vue").toString();
 
-let ast = transform(testVue, { preservePrefix, nameGenerator });
+let result = plugin.transform(testVue, "test.vue");
 
-writeFileSync("./test/ast.json", JSON.stringify(ast, null, 4));
-
-let funcStr = generateCode(ast, {});
-
-let template = wrap(funcStr);
-
-let htmlTemplateCode = template({});
-
-writeFileSync("./test/result.html", htmlTemplateCode);
+writeFileSync("./test/result.vue", result);

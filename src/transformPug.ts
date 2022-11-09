@@ -2,8 +2,9 @@ import type { Options as TPugOptions } from "pug";
 
 import type { TLocalTransformOptions } from "./types";
 
+import { transformJsValue } from "./transformJsValue.js";
+
 import { createRequire } from "module";
-import { transformJsValue } from "./transformJsValue";
 const require = createRequire(import.meta.url);
 
 let pug: {
@@ -17,7 +18,7 @@ let pug: {
 const resolvePug = () => {
   pug = {
     lex: require("pug-lexer"),
-    parse: require("pug-parse"),
+    parse: require("pug-parser"),
     walk: require("pug-walk"),
     generate: require("pug-code-gen"),
     wrap: require("pug-runtime/wrap"),
@@ -46,7 +47,7 @@ export const transformPug = (
 
   let ast = parse(lex(source));
 
-  ast = walk(ast, node => {
+  walk(ast, node => {
     // if node has attributes
     if (node.attrs?.length) {
       // mutate class and id attributes
@@ -83,9 +84,12 @@ export const transformPug = (
 
               value = transformJsValue(value, { preservePrefix, localNameGenerator, module });
 
-              //   attr.val = "`" + value + "`";
+              attr.val = "`" + value.replace(/`/g, "'") + "`";
               attr.val = value;
-              //   attr.mustEscape = false;
+
+              console.log(value);
+
+              attr.mustEscape = false;
             }
             break;
         }

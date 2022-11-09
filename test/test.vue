@@ -9,7 +9,7 @@ span(:class=`{
     'string-const':toggle2,
     "another-one" :toggle3
 }`)
-div(:class="class")
+div(:class="varClass")
 div(:class="'class4'")
 div(:class='"class5"')
 div(:class="v ? 'class6' : `class7`")

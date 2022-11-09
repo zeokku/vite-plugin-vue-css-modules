@@ -4,6 +4,7 @@ import { devNameGeneratorContext, prodNameGeneratorContext } from "./nameGenerat
 
 import { parse as sfcParse } from "@vue/compiler-sfc";
 import { transformPug } from "./transformPug.js";
+import { transformHtml } from "./transformHtml.js";
 
 // import type { Options as TPugOptions } from "pug";
 
@@ -68,25 +69,39 @@ function plugin({
         } = sfcParse(code);
 
         //skip sfc if there's no module styles
-        // @todo let styleModule = s.module;
+        // @todo let styleModule: string | boolean = s.module;
         if (!styles.find(s => s.module)) {
           return;
         }
 
         let localNameGenerator = (name: string) => nameGenerator(name, id, "");
 
+        // undefined means html as well
+        template.lang ??= "html";
+
+        let transformedTemplate;
+
         if (template.lang === "pug") {
-          return transformPug(template.content, pugLocals, {
+          transformedTemplate = transformPug(template.content, pugLocals, {
             preservePrefix,
             localNameGenerator,
             module: scriptTransform ? false : "$style",
           });
+        } else if (template.lang === "html") {
+          transformedTemplate = transformHtml(template.content, {
+            preservePrefix,
+            localNameGenerator,
+            module: scriptTransform ? false : "$style",
+          });
+        } else {
+          console.error(`Unsupported template language "${template.lang}"! Skipped`);
+          return;
         }
 
-        return code;
+        return code //
+          .replace('lang="pug"', "") // pug transform returns html
+          .replace(template.content, transformedTemplate);
       }
-
-      return null;
     },
   };
   // @todo satisfies Plugin;
