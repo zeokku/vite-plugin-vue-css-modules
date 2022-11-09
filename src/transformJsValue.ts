@@ -1,31 +1,16 @@
-import lex from "pug-lexer";
-import parse from "pug-parser";
-import walk from "pug-walk";
-
 import babelParser from "@babel/parser";
 import _babelTraverse, { NodePath } from "@babel/traverse";
 import _babelGenerator from "@babel/generator";
-import babelTypes, { Expression } from "@babel/types";
-import { readFileSync, writeFileSync } from "fs";
+import babelTypes, { type Expression } from "@babel/types";
 
-import { parse as sfcParse } from "@vue/compiler-sfc";
-
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
+import type { TLocalTransformOptions } from "./types";
 
 // @ts-expect-error
 const babelTraverse: typeof _babelTraverse = _babelTraverse.default;
 // @ts-expect-error
 const babelGenerator: typeof _babelGenerator = _babelGenerator.default;
 
-type TNameGenerator = (name: string) => string;
-
-interface TTransformOptions {
-  preservePrefix: string;
-  nameGenerator: TNameGenerator;
-}
-
-const generateModuleAccess = (path: NodePath<Expression>, module = "$style" as string | false) => {
+const generateModuleAccess = (path: NodePath<Expression>, module: string | false) => {
   if (module) {
     path.replaceWith(
       //
@@ -38,24 +23,17 @@ const generateModuleAccess = (path: NodePath<Expression>, module = "$style" as s
     );
   }
 };
-export const transform = (source: string, { preservePrefix, nameGenerator }: TTransformOptions) => {
-  let exp = readFileSync("./test/test-exp.js").toString();
 
-  // console.log(require("pug"));
-
-  let sfc = sfcParse(readFileSync("./test/test.vue").toString());
-
+export const transformJsValue = (
+  exp: string,
+  { preservePrefix, localNameGenerator, module }: TLocalTransformOptions
+) => {
   // @note wrap in (...)
   let ast = babelParser.parseExpression(`(${exp})`, {
     ranges: false, // this doesn't seem to work lol, as it still adds ranges?
     plugins: ["typescript"],
   });
 
-  // writeFileSync("./test/babel-ast.json", JSON.stringify(ast, null, 4));
-
-  //ObjectExpression.properties[]{key, value, computed}
-
-  // @ts-ignore
   babelTraverse(ast, {
     noScope: true,
 
@@ -68,7 +46,7 @@ export const transform = (source: string, { preservePrefix, nameGenerator }: TTr
         parentPath.isConditionalExpression({ consequent: node }) ||
         parentPath.isConditionalExpression({ alternate: node })
       ) {
-        generateModuleAccess(path);
+        generateModuleAccess(path, module);
 
         path.skip();
       }
@@ -78,9 +56,10 @@ export const transform = (source: string, { preservePrefix, nameGenerator }: TTr
         // TypeError: Property key of ObjectProperty expected node to be of a type ["Identifier","StringLiteral","NumericLiteral","BigIntLiteral","DecimalLiteral","PrivateName"] but instead got "MemberExpression"
 
         if (parentPath.node.computed) {
-          generateModuleAccess(path);
+          generateModuleAccess(path, module);
         } else {
-          path.replaceWith(babelTypes.stringLiteral(nameGenerator(node.name)));
+          // if(!node.name.startsWidth(preservePrefix)) // @todo ?
+          path.replaceWith(babelTypes.stringLiteral(localNameGenerator(node.name)));
         }
 
         // skip processing modified node
@@ -89,19 +68,18 @@ export const transform = (source: string, { preservePrefix, nameGenerator }: TTr
     },
 
     StringLiteral({ node }) {
-      node.value = nameGenerator(node.value);
+      // @todo ? preservePrefix
+      node.value = localNameGenerator(node.value);
     },
 
     TemplateElement(path) {
       let { node } = path;
 
-      path.replaceWith(babelTypes.templateElement({ raw: nameGenerator(node.value.cooked) }));
+      path.replaceWith(babelTypes.templateElement({ raw: localNameGenerator(node.value.cooked) }));
 
       path.skip();
     },
   });
 
-  writeFileSync("./test/babel-after.js", babelGenerator(ast).code);
-
-  return parse(lex(source));
+  return babelGenerator(ast).code;
 };

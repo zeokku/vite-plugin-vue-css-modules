@@ -8,7 +8,9 @@ import { transform } from "../dist/transform3.js";
 let preservePrefix = "--";
 let nameGenerator = name => "TEST__" + name;
 
-let ast = transform(readFileSync("./test/test.pug").toString(), { preservePrefix, nameGenerator });
+let testVue = readFileSync("./test/test.vue").toString();
+
+let ast = transform(testVue, { preservePrefix, nameGenerator });
 
 writeFileSync("./test/ast.json", JSON.stringify(ast, null, 4));
 

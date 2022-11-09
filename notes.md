@@ -13,3 +13,5 @@ https://astexplorer.net/
 # @blog isObjectProperty(props?: object | null): this is NodePath<t.ObjectProperty>;
 
 `this is ...` - cool thing
+
+# @todo try iterator for name generator

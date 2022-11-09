@@ -1,12 +1,12 @@
 import incstr from "incstr";
 import path from "path";
 
-import type { PluginOptions } from ".";
+import type { TPluginOptions } from ".";
 
 // filename
 // C:/.../src/views/About.vue?vue&type=style&index=0&lang.module.less
 
-const prodNameGeneratorContext = (): PluginOptions["nameGenerator"] => {
+const prodNameGeneratorContext = (): TPluginOptions["nameGenerator"] => {
   let namesMap: Record<string, string> = {};
 
   //move dash to the end to optimize name generation
@@ -44,7 +44,7 @@ const prodNameGeneratorContext = (): PluginOptions["nameGenerator"] => {
   // @todo satisfies PluginOptions['nameGenerator'];
 };
 
-const devNameGeneratorContext = (): PluginOptions["nameGenerator"] => {
+const devNameGeneratorContext = (): TPluginOptions["nameGenerator"] => {
   return (name, filename) => {
     return path.basename(filename).split(".")[0] + "__" + name;
   };

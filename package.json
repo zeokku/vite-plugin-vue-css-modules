@@ -3,7 +3,7 @@
   "version": "3.0.0",
   "description": "Ultimate solution for using CSS modules without any hassle. Automatic replacement for Vue templates",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp src/macro.d.ts dist/macro.d.ts",
     "watch": "tsc --watch",
     "test": "node ./test"
   },
@@ -33,6 +33,8 @@
     "@types/babel__generator": "^7.6.4",
     "@types/babel__traverse": "^7.18.2",
     "@types/node": "^16.18.3",
+    "@types/pug": "^2.0.6",
+    "@vue/compiler-sfc": "^3.2.41",
     "pug": "^3.0.2",
     "typescript": "^4.9.2-rc",
     "vite": "^3.2.3"
@@ -46,7 +48,12 @@
     "incstr": "^1.2.3"
   },
   "optionalDependencies": {
-    "pug": "^3.0.2"
+    "pug": "^3.0.2",
+    "pug-code-gen": "^3.0.0",
+    "pug-lexer": "^5.0.1",
+    "pug-parser": "^6.0.0",
+    "pug-runtime": "^3.0.1",
+    "pug-walk": "^2.0.0"
   },
   "author": "Lutymane <luty@zeokku.com>",
   "bugs": {
