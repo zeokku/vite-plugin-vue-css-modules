@@ -1,6 +1,6 @@
 dist
 test/ast.json
-test/result.html
+test/result*
 
 # Logs
 logs
