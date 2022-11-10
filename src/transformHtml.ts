@@ -1,3 +1,5 @@
+import { parseFragment, serializeOuter } from "parse5";
+
 import type { TLocalTransformOptions } from "./types";
 
 import { transformJsValue } from "./transformJsValue.js";
@@ -11,5 +13,9 @@ export const transformHtml = (
   source: string,
   { preservePrefix, localNameGenerator, module }: TLocalTransformOptions
 ) => {
-  //
+  let ast = parseFragment(source);
+
+  console.log("HTML transform not implemented yet");
+
+  return serializeOuter(ast);
 };

@@ -5,6 +5,7 @@ import { devNameGeneratorContext, prodNameGeneratorContext } from "./nameGenerat
 import { parse as sfcParse } from "@vue/compiler-sfc";
 import { transformPug } from "./transformPug.js";
 import { transformHtml } from "./transformHtml.js";
+import { transformScript } from "./transformScript.js";
 
 // import type { Options as TPugOptions } from "pug";
 
@@ -31,9 +32,11 @@ const dev = process.env.NODE_ENV !== "production";
  *
  * @param options object with optional properties:
  *
- * **`preservePrefix`** - string to use a prefix for keeping the names raw, the prefix is removed in the resulting code
+ * **`preservePrefix`** - string to use as a prefix for keeping the names raw, the prefix is removed in the resulting code
  *
- * **`scriptTransform`** - you can use `$useCssModule('className')` macro, which will be statically replaced in your script with the resulting CSS module name
+ * **`scriptTransform`** - you can use `$useCssModule('className')` macro, which will be statically replaced in your script (if this flag is `true`) with the resulting CSS module name. It's recommended to enable this only for production to save processing time during the development
+ *
+ * **`nameGenerator`** - function returning a unique name for a unique input. It must maintain its internal state to return the same result for subsequent calls with identical input
  *
  * @returns Vite plugin object
  */
@@ -65,8 +68,23 @@ function plugin({
     transform(code, id) {
       if (id.match(/\.vue$/)) {
         let {
-          descriptor: { template, script, styles },
+          descriptor: { template, script, scriptSetup, styles },
         } = sfcParse(code);
+
+        // console.log(
+        //   template.content.length,
+        //   template.loc.end.offset - template.loc.start.offset,
+        //   JSON.stringify(
+        //     sfcParse(code),
+        //     (key, value) => {
+        //       if (["source", "content", "mappings", "ast", "sourcesContent"].includes(key))
+        //         return "<<omitted>>";
+
+        //       return value;
+        //     },
+        //     4
+        //   )
+        // );
 
         //skip sfc if there's no module styles
         // @todo let styleModule: string | boolean = s.module;
@@ -79,28 +97,88 @@ function plugin({
         // undefined means html as well
         template.lang ??= "html";
 
-        let transformedTemplate;
+        let transformedTemplate: string;
 
-        if (template.lang === "pug") {
-          transformedTemplate = transformPug(template.content, pugLocals, {
-            preservePrefix,
-            localNameGenerator,
-            module: scriptTransform ? false : "$style",
-          });
-        } else if (template.lang === "html") {
-          transformedTemplate = transformHtml(template.content, {
-            preservePrefix,
-            localNameGenerator,
-            module: scriptTransform ? false : "$style",
-          });
-        } else {
-          console.error(`Unsupported template language "${template.lang}"! Skipped`);
-          return;
+        switch (template.lang) {
+          case "pug":
+            {
+              transformedTemplate = transformPug(template.content, pugLocals, {
+                preservePrefix,
+                localNameGenerator,
+                module: scriptTransform ? false : "$style",
+              });
+            }
+            break;
+          case "html":
+            {
+              transformedTemplate = transformHtml(template.content, {
+                preservePrefix,
+                localNameGenerator,
+                module: scriptTransform ? false : "$style",
+              });
+            }
+            break;
+          default:
+            console.error(`Unsupported template language "${template.lang}"! Skipped`);
+
+            return;
         }
 
-        return code //
-          .replace('lang="pug"', "") // pug transform returns html
-          .replace(template.content, transformedTemplate);
+        let templateOffsetChange = transformedTemplate.length - template.content.length;
+
+        // @note use slice as it's faster than replace
+        let transformedSfc =
+          code
+            .slice(0, template.loc.start.offset) //
+            .replace(`lang="${template.lang}"`, (sub: string) => {
+              templateOffsetChange -= sub.length;
+              return "";
+            }) +
+          transformedTemplate +
+          code.slice(template.loc.end.offset);
+
+        if (scriptTransform) {
+          let scriptSetupOffsetChange: number;
+
+          if (scriptSetup) {
+            let transformedScriptSetup = transformScript(scriptSetup.content, localNameGenerator);
+
+            scriptSetupOffsetChange = transformedScriptSetup.length - scriptSetup.content.length;
+
+            let offset =
+              scriptSetup.loc.start.offset < template.loc.start.offset
+                ? // if script setup before template
+                  0
+                : //after template
+                  templateOffsetChange;
+
+            transformedSfc =
+              transformedSfc.slice(0, scriptSetup.loc.start.offset + offset) +
+              transformedScriptSetup +
+              transformedSfc.slice(scriptSetup.loc.end.offset + offset);
+          }
+
+          if (script) {
+            let transformedScript = transformScript(script.content, localNameGenerator);
+
+            let offset = 0;
+
+            // add offset caused by template transform
+            offset +=
+              script.loc.start.offset < template.loc.start.offset ? 0 : templateOffsetChange;
+
+            // add offset caused by script setup transform
+            offset +=
+              script.loc.start.offset < scriptSetup.loc.start.offset ? 0 : scriptSetupOffsetChange;
+
+            transformedSfc =
+              transformedSfc.slice(0, script.loc.start.offset + offset) +
+              transformedScript +
+              transformedSfc.slice(script.loc.end.offset + offset);
+          }
+        }
+
+        return transformedSfc;
       }
     },
   };

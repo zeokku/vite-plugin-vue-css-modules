@@ -1,5 +1,5 @@
 import babelParser from "@babel/parser";
-import _babelTraverse, { NodePath } from "@babel/traverse";
+import _babelTraverse, { NodePath, Scope } from "@babel/traverse";
 import _babelGenerator from "@babel/generator";
 import babelTypes, { type Expression } from "@babel/types";
 
@@ -29,11 +29,20 @@ export const transformJsValue = (
   { preservePrefix, localNameGenerator, module }: TLocalTransformOptions
 ) => {
   // @note wrap in (...)
-  let ast = babelParser.parseExpression(`(${exp})`, {
+  // rip `parseExpression`, the time difference is negligible i'm sure
+  // to sacrifice better code readability
+  let ast = babelParser.parse(`(${exp})`, {
     ranges: false, // this doesn't seem to work lol, as it still adds ranges?
     plugins: ["typescript"],
   });
 
+  // process root node
+  // visitor[ast.type]?.({ node: ast });
+
+  // @note wrap ast into expression statement to serve as root element during traversal
+  // ast = babelTypes.expressionStatement(ast) as any;
+
+  // @note TRAVERSE ACCEPTS PARENT NODE! SO IT WON'T PROCESS THE ROOT NODE!!!
   babelTraverse(ast, {
     noScope: true,
 
@@ -41,7 +50,8 @@ export const transformJsValue = (
       let { parentPath, node } = path;
 
       if (
-        !parentPath || // undefined if exp is just an identifier
+        // !parentPath || // undefined when using parseExpression. the exp is an identifier
+        parentPath.isExpressionStatement() || // identifier
         parentPath.isArrayExpression() ||
         parentPath.isConditionalExpression({ consequent: node }) ||
         parentPath.isConditionalExpression({ alternate: node })
@@ -81,5 +91,6 @@ export const transformJsValue = (
     },
   });
 
-  return babelGenerator(ast).code;
+  // remove ; at the end
+  return babelGenerator(ast).code.slice(0, -1);
 };

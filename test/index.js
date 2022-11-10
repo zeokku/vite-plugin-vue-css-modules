@@ -4,7 +4,10 @@ import pluginFactory from "../dist/index.js";
 
 let nameGenerator = name => "TEST__" + name;
 
-const plugin = pluginFactory({ nameGenerator });
+const plugin = pluginFactory({
+  scriptTransform: false,
+  nameGenerator,
+});
 
 let testVue = readFileSync("./test/test.vue").toString();
 

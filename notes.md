@@ -15,3 +15,16 @@ https://astexplorer.net/
 `this is ...` - cool thing
 
 # @todo try iterator for name generator
+
+# babel hell
+
+babel traverse doesn't process the root node, so visitors won't be called on that.
+solution is to wrap ast into ExpressionStatement but it then generates the result with a semicolon as if using `parse` insted of `parseExpression`
+
+ended up just using parse and `.slice(0, -1)` to remove the semicolon
+
+# `.replace()` must be quite slow, use `slice` instead with offsets from vue-sfc parser
+
+# @todo css dictionary names
+
+# idea to enable script transform as `<script css-module-transform>` tag attribute?

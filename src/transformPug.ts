@@ -39,7 +39,11 @@ export const transformPug = (
   pugLocals: Record<string, any>,
   { preservePrefix, localNameGenerator, module }: TLocalTransformOptions
 ) => {
-  let pugOptions = { doctype: "html", compileDebug: pugLocals.dev }; /*satisfies TPugOptions*/
+  let pugOptions: TPugOptions = {
+    doctype: "html",
+    compileDebug: pugLocals.dev,
+    pretty: pugLocals.dev,
+  }; /*satisfies TPugOptions*/
 
   if (!pug) resolvePug();
 
@@ -84,11 +88,9 @@ export const transformPug = (
 
               value = transformJsValue(value, { preservePrefix, localNameGenerator, module });
 
-              attr.val = "`" + value.replace(/`/g, "'") + "`";
-              attr.val = value;
+              attr.val = "`" + value.replace(/`|"/g, "'") + "`";
 
-              console.log(value);
-
+              // " -> &quot; and etc
               attr.mustEscape = false;
             }
             break;
