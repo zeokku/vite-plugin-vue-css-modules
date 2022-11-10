@@ -73,9 +73,9 @@ export const transformPug = (
             break;
 
           // escaped dynamic
-          case ":--class":
-          case ":--id":
-            attr.name = ":" + attr.name.slice(3);
+          case `:${preservePrefix}class`:
+          case `:${preservePrefix}id`:
+            attr.name = ":" + attr.name.slice(1 + preservePrefix.length);
             break;
 
           // dynamic
