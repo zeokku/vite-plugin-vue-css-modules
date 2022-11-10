@@ -5,12 +5,12 @@ import pluginFactory from "../dist/index.js";
 let nameGenerator = name => "TEST__" + name;
 
 const plugin = pluginFactory({
-  scriptTransform: false,
+  scriptTransform: true,
   nameGenerator,
 });
 
 let testVue = readFileSync("./test/test.vue").toString();
+let testPugVue = readFileSync("./test/test.pug.vue").toString();
 
-let result = plugin.transform(testVue, "test.vue");
-
-writeFileSync("./test/result.vue", result);
+writeFileSync("./test/result.vue", plugin.transform(testVue, "test.vue"));
+writeFileSync("./test/result.pug.vue", plugin.transform(testPugVue, "test.vue"));
