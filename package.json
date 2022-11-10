@@ -11,7 +11,8 @@
   "type": "module",
   "license": "MIT",
   "files": [
-    "dist/*"
+    "dist/*",
+    "macros.d.ts"
   ],
   "repository": {
     "type": "git",
