@@ -138,7 +138,7 @@ function plugin({
           code.slice(template.loc.end.offset);
 
         if (scriptTransform) {
-          let scriptSetupOffsetChange: number;
+          let scriptSetupOffsetChange = 0;
 
           if (scriptSetup) {
             let transformedScriptSetup = transformScript(scriptSetup.content, localNameGenerator);
@@ -168,8 +168,12 @@ function plugin({
               script.loc.start.offset < template.loc.start.offset ? 0 : templateOffsetChange;
 
             // add offset caused by script setup transform
-            offset +=
-              script.loc.start.offset < scriptSetup.loc.start.offset ? 0 : scriptSetupOffsetChange;
+            if (scriptSetup) {
+              offset +=
+                script.loc.start.offset < scriptSetup.loc.start.offset
+                  ? 0
+                  : scriptSetupOffsetChange;
+            }
 
             transformedSfc =
               transformedSfc.slice(0, script.loc.start.offset + offset) +
