@@ -1,23 +1,22 @@
 {
   "name": "vite-plugin-vue-static-css-modules",
+  "description": "✨ Ultimate solution for using CSS modules without any hassle. Automatic replacement for Vue templates",
   "version": "3.0.0",
-  "description": "Ultimate solution for using CSS modules without any hassle. Automatic replacement for Vue templates",
+  "author": "Lutymane <luty@zeokku.com>",
+  "funding": "https://ko-fi.com/zeokku",
+  "license": "MIT",
+  "type": "module",
+  "module": "./dist/index.js",
   "scripts": {
-    "build": "tsc && cp src/macro.d.ts dist/macro.d.ts",
+    "build": "tsc",
     "watch": "tsc --watch",
     "test": "node ./test"
   },
-  "main": "dist/index.js",
-  "type": "module",
-  "license": "MIT",
   "files": [
     "dist/*",
     "macros.d.ts"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/zeokku/vite-plugin-vue-pug-with-css-modules.git"
-  },
+  "repository": "github:zeokku/vite-plugin-vue-static-css-modules",
   "keywords": [
     "vite",
     "vite-plugin",
@@ -55,11 +54,10 @@
     "pug-walk": "^2.0.0"
   },
   "peerDependencies": {
-    "@vue/compiler-sfc": "^3.2.0"
+    "@vue/compiler-sfc": "^3.0.0"
   },
-  "author": "Lutymane <luty@zeokku.com>",
   "bugs": {
-    "url": "https://github.com/zeokku/vite-plugin-vue-pug-with-css-modules/issues"
+    "url": "https://github.com/zeokku/vite-plugin-vue-static-css-modules/issues"
   },
-  "homepage": "https://github.com/zeokku/vite-plugin-vue-pug-with-css-modules#readme"
+  "homepage": "https://github.com/zeokku/vite-plugin-vue-static-css-modules#readme"
 }

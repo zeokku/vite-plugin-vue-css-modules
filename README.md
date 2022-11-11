@@ -2,11 +2,11 @@
 [![npm](https://img.shields.io/npm/dw/vite-plugin-vue-static-css-modules?color=pink&style=flat-square)](https://www.npmjs.com/package/vite-plugin-vue-static-css-modules)
 [![Discord](https://img.shields.io/discord/405510915845390347?color=pink&label=join%20discord&style=flat-square)](https://zeokku.com/discord)
 
-# vite-plugin-vue-static-css-modules
+# ✨ vite-plugin-vue-static-css-modules
 
-**Ultimate solution** for handling **CSS modules** for Vue. You don't have to use `$style` object in templates, just write the code as usual.
+⚡ **Ultimate solution** for using **CSS modules** without any hassle. Automatic replacement for Vue templates. You don't have to use `$style` object, just write the code as usual.
 
-The plugin statically processes and replaces names, so there's also **no** scripting overhead due to accessing `$style` object.
+⚡ The plugin statically processes and replaces names, so there's also **no** scripting overhead due to accessing the `$style` object.
 
 ## Installation
 
