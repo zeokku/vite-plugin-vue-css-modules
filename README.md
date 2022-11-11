@@ -1,39 +1,85 @@
-[![npm](https://img.shields.io/npm/v/vite-plugin-vue-pug-with-css-modules?color=pink&style=flat-square)](https://www.npmjs.com/package/vite-plugin-vue-pug-with-css-modules)
-[![npm](https://img.shields.io/npm/dw/vite-plugin-vue-pug-with-css-modules?color=pink&style=flat-square)](https://www.npmjs.com/package/vite-plugin-vue-pug-with-css-modules)
+[![npm](https://img.shields.io/npm/v/vite-plugin-vue-static-css-modules?color=pink&style=flat-square)](https://www.npmjs.com/package/vite-plugin-vue-static-css-modules)
+[![npm](https://img.shields.io/npm/dw/vite-plugin-vue-static-css-modules?color=pink&style=flat-square)](https://www.npmjs.com/package/vite-plugin-vue-static-css-modules)
 [![Discord](https://img.shields.io/discord/405510915845390347?color=pink&label=join%20discord&style=flat-square)](https://zeokku.com/discord)
 
-# vite-plugin-vue-pug-with-css-modules
+# vite-plugin-vue-static-css-modules
 
-Vite plugin for implicit usage of CSS modules inside of Vue SFC Pug templates
+**Ultimate solution** for handling **CSS modules** for Vue. You don't have to use `$style` object in templates, just write the code as usual.
 
-This plugin is a port of original vue-cli [plugin](https://github.com/zeokku/vue-cli-plugin-pug-with-css-modules) with a bunch of additions and tweaks (eventually I'll add them for the original one as well)
-
-Implicit usage of CSS modules means you may write your Pug templates as usual without having to type `$style['...']` manually every time (see example below)
+The plugin statically processes and replaces names, so there's also **no** scripting overhead due to accessing `$style` object.
 
 ## Installation
 
 ```
-yarn add -D vite-plugin-vue-pug-with-css-modules
+pnpm add -D vite-plugin-vue-static-css-modules
+# or
+yarn add -D vite-plugin-vue-static-css-modules
+# or
+npm i -D vite-plugin-vue-static-css-modules
 ```
+
+## Usage
 
 In `vite.config.ts`:
 
 ```javascript
-import { plugin as picm } from "vite-plugin-vue-pug-with-css-modules";
+import staticCssModules, { removeCssModulesChunk } from "vite-plugin-vue-static-css-modules";
 
 export default defineConfig({
-    plugins: [picm(), vue(), ...],
-    ...
-})
+  plugins: [
+    //...,
+    staticCssModules(),
+    vue(),
+    // optionally
+    removeCssModulesChunk(),
+    //...
+  ],
+  //...
+});
 ```
 
-Notice that the plugin should go **BEFORE** vue() plugin, so it could transform templates
+Notice that the plugin should go **BEFORE** `vue()` plugin, so it could transform `<template>` and `<script>` blocks.
 
-(If you get errors regarding ESM importing, make sure to use `"type": "module"` in your project's package.json)
+If you used `<style scoped>` before, the plugin should work out of the box without any additional settings, just replace `scoped` by `module`.
 
-Don't forget to use `module` attribute and remove `scoped` in your <style\> blocks
+## Options
 
-By default the plugin generates COMPONENT\_\_CLASSNAME values in development and minimized names during `vite build`
+The `staticCssModules()` plugin accepts an object `{}` with options:
+
+- `preservePrefix` - an arbitrary string to be used as a prefix for names so they would not be processed and instead would be preserved as-is without the prefix. Useful for styles unaffected by CSS modules or custom #id values **(default: `"--"`)**
+- `scopeBehaviour` - corresponds to `CSSModulesOptions["scopeBehaviour"]` **(default: `"local"`)**
+- `scriptTransform` - if it's `false` - the plugin **will** wrap variables inside of `<template>` in CSS module context variable like so `$style[var]`. If it's `true` then the plugin will transform macros in `<script>` and `<script setup>` blocks and **will not** wrap anything in `<template>` (see more below) **(default: `false`)**
+- `pugLocals` - an object containing variables for Pug templates **(default: `{}`)**
+- `nameGenerator` - a function of type `CSSModulesOptions["generateScopedName"]` accepting (name, filename, css) arguments. This function will be called for each name in each file and it should return a result which will be used for generating a stylesheet. It is possible that the function may be called multiple times with the same pair of name and filename, so it must maintain its own state to return the same name in such case.
+
+  The plugin provides two generators as **default** value. If `process.env.NODE_ENV !== "production"` then the generator returns `COMPONENT__CLASSNAME`, while in production another one is used that will minimize the names.
+
+## Script handling
+
+You can optionally use `removeCssModulesChunk()` plugin after `vue()` to strip out CSS module object for each component due to its redundancy, in this case `$style` and other CSS module context variables won't be available in `<template>`, so if you reference names in variables and use them in `<template>`, you must use `$cssModule` macro in `<script>` (see below).
+
+If you need to access CSS modules in Javascript, you have two options:
+
+1. _RECOMMENDED!_ Use `$cssModule` macro to access CSS modules (and set `scriptTransform` to `true`).
+
+   If you're using Typescript, place the following code in your `env.d.ts` (or any other file) to get types support
+
+   ```ts
+   /// <reference path="vite-plugin-vue-static-css-modules/macros.d.ts" />
+   ```
+
+   The macro will be statically replaced with a resulting name string, so you can reference the variable in `<template>` as usual. Since the replacement is static you're allowed to use only the following forms:
+
+   <!-- prettier-ignore -->
+   ```ts
+   $style["class-name"];
+   // OR
+   $style['class2'];
+   // OR
+   $style.anotherClass;
+   ```
+
+2. `useCssModule` Vue composition function. Depending on the usage of JS variables in `<template>` you may either enable or disable `scriptTransform`. If you use the result of `useCssModules()[...]` in your `<template>` then you should enable `scriptTransform`, so the plugin doesn't wrap these variables in `$style[...]`. Otherwise set it to `false`, so any other referenced variables in `<template>` will be wrapped.
 
 ## Example
 
@@ -41,113 +87,218 @@ To use the plugin you won't need to change your templates. Look at the example:
 
 ```vue
 <template lang="pug">
-bob.sas(
-  :class="{ state, locked }",
-  @click="setState"
-)
-  .child 
-    .grand-child
+.class0.class2(:class="varClass")
+    #id0.class3 test
 
-#id.a.z.x(:class="[b, c, d]")
+.class0 
+    div(:class="varClass")
+    div(:class="'class4'")
+    div(:class='"class5"')
+    div(:class="v ? 'class6' : `class7`")
 
-div(:class="{d: someVar}" :id="someIdVar")
-div(:class="a ? 'b' : c")
-div(:class="someOtherVar")
+div(:class="[{b: v}, {cv}, 'c', `d`, nop]") Yop
 
-bob
+span(:class=`{
+    [computed] : toggle0,
+    static: toggle1,
+    'string-const':toggle2,
+    "another-one" :toggle3
+}`)
+
+div(:class="v0 ? 'class8' : v1 ? 'class9' : v2 ? class10 :'class11'")
+    div(:class="v0 ? varClass0 : varClass1") Now this is processed
+
+.--escaped0 
+#--escaped1 
+
+div(:--class="someRawVar")
+div(:--id="someRawVar2")
 </template>
 
-<style module>
-.sas {
-  //
+<script lang="ts">
+export const aaaa = "test";
+
+console.log("script");
+</script>
+
+<script lang="ts" setup>
+/// <reference path="vite-plugin-vue-static-css-modules/macros.d.ts" />
+
+const props = defineProps<{ title: string }>();
+
+let varClass = $cssModule.test;
+
+let varClass0 = $cssModule["test-class"];
+
+let varClass1 = $cssModule["test-class2"];
+
+let varClass2 = $cssModule[`test-class3`];
+
+alert("test!");
+</script>
+
+<style lang="less" module>
+.class0 {
+  display: flex;
 }
 
-.state {
-  //
+.class2 {
+  display: grid;
 }
 
-//
+.class1 {
+  display: ruby;
+}
 </style>
 ```
 
-The plugin processes pug and transforms class and id attributes to use $style and then compiles into html:
+Result with `scriptTransform` enabled:
 
-```html
-<bob
-  :class="[ $style['sas'], {[$style['state']] : state}, {[$style['locked']] : locked} ]"
-  @click="setState"
->
-  <div :class="$style['child']">
-    <div :class="$style['grand-child']"></div>
+```vue
+<template>
+  <div class="TEST__class0 TEST__class2" :class="varClass">
+    <div class="TEST__class3" id="TEST__id0">test</div>
   </div>
-</bob>
-<div
-  :id="$style['id']"
-  :class="[ $style['a'], $style['z'], $style['x'], $style[b], $style[c], $style[d] ]"
-></div>
-<div :id="$style[someIdVar]" :class="{[$style['d']] : someVar}"></div>
-<div :class="$style[a ? 'b' : c]"></div>
-<div :class="$style[someOtherVar]"></div>
-<bob></bob>
+  <div class="TEST__class0">
+    <div :class="varClass"></div>
+    <div :class="'TEST__class4'"></div>
+    <div :class="'TEST__class5'"></div>
+    <div :class="v ? 'TEST__class6' : 'TEST__class7'"></div>
+  </div>
+  <div
+    :class="[
+      {
+        TEST__b: v,
+      },
+      {
+        TEST__cv: cv,
+      },
+      'TEST__c',
+      'TEST__d',
+      nop,
+    ]"
+  >
+    Yop
+  </div>
+  <span
+    :class="{
+      [computed]: toggle0,
+      TEST__static: toggle1,
+      'TEST__string-const': toggle2,
+      'TEST__another-one': toggle3,
+    }"
+  ></span>
+  <div :class="v0 ? 'TEST__class8' : v1 ? 'TEST__class9' : v2 ? class10 : 'TEST__class11'">
+    <div :class="v0 ? varClass0 : varClass1">Now this is processed</div>
+  </div>
+  <div class="escaped0"></div>
+  <div id="escaped1"></div>
+  <div :class="someRawVar"></div>
+  <div :id="someRawVar2"></div>
+</template>
+
+<script lang="ts">
+export const aaaa = "test";
+
+console.log("script");
+</script>
+
+<script lang="ts" setup>
+/// <reference path="../macros.d.ts" />
+
+const props = defineProps<{ title: string }>();
+
+let varClass = "TEST__test";
+
+let varClass0 = "TEST__test-class";
+
+let varClass1 = "TEST__test-class2";
+
+let varClass2 = "TEST__test-class3";
+
+alert("test!");
+</script>
+
+<style lang="less" module>
+.class0 {
+  display: flex;
+}
+
+.class2 {
+  display: grid;
+}
+
+.class1 {
+  display: ruby;
+}
+</style>
+```
+
+Result with `scriptTransform` disabled. Notice that variables are wrapped in `$style`
+
+```vue
+<template>
+  <div class="TEST__class0 TEST__class2" :class="$style[varClass]">
+    <div class="TEST__class3" id="TEST__id0">test</div>
+  </div>
+  <div class="TEST__class0">
+    <div :class="$style[varClass]"></div>
+    <div :class="'TEST__class4'"></div>
+    <div :class="'TEST__class5'"></div>
+    <div :class="v ? 'TEST__class6' : 'TEST__class7'"></div>
+  </div>
+  <div
+    :class="[
+      {
+        TEST__b: v,
+      },
+      {
+        TEST__cv: cv,
+      },
+      'TEST__c',
+      'TEST__d',
+      $style[nop],
+    ]"
+  >
+    Yop
+  </div>
+  <span
+    :class="{
+      [$style[computed]]: toggle0,
+      TEST__static: toggle1,
+      'TEST__string-const': toggle2,
+      'TEST__another-one': toggle3,
+    }"
+  ></span>
+  <div :class="v0 ? 'TEST__class8' : v1 ? 'TEST__class9' : v2 ? $style[class10] : 'TEST__class11'">
+    <div :class="v0 ? $style[varClass0] : $style[varClass1]">Now this is processed</div>
+  </div>
+  <div class="escaped0"></div>
+  <div id="escaped1"></div>
+  <div :class="someRawVar"></div>
+  <div :id="someRawVar2"></div>
+</template>
 ```
 
 ## Edge cases
 
-Sometimes it's needed to preserve id/class names. In this scenario use `--` as a prefix to keep the name (Or you can select your own prefix using plugin options)
+Sometimes it's needed to preserve id/class names. Here is where `preservePrefix` option is used. From the examples above:
 
-**ID Example:**
+```pug
+.--escaped0
+#--escaped1
 
-```vue
-<template lang="pug">
-svg <!-- preserve tag case -->
-  filter#--filter-1
-    //...
-
-.element bababooey
-</template>
-
-<style module>
-.element {
-  filter: url(#filter-1);
-}
-</style>
+div(:--class="someRawVar")
+div(:--id="someRawVar2")
 ```
 
-_Notice, that the prefix is removed in the output_
+was turned into
 
-**Computed :ID example**
-
-```vue
-<template lang="pug">
-.element(:--id="someComputedId")
-</template>
+```html
+<div class="escaped0"></div>
+<div id="escaped1"></div>
+<div :class="someRawVar"></div>
+<div :id="someRawVar2"></div>
 ```
 
-Output will have `:id="someComputedId"` instead of `:id="$style[someComputedId]"`
-
-**Class example**
-
-```vue
-<template lang="pug">
-.--element bababooey
-.--element2 test
-
-.this-will-be-minified bog
-</template>
-
-<style>
-.element {
-  //
-}
-</style>
-
-<style module>
-.this-will-be-minified {
-  //
-}
-
-:global(.element2) {
-  //
-}
-</style>
-```
+no matter the settings
