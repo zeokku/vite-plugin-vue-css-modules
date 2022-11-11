@@ -38,13 +38,13 @@ console.log('script');
 
 const props = defineProps<{ title: string }>();
 
-let varClass = $style.test;
+let varClass = $cssModule.test;
 
-let varClass0 = $style['test-class']
+let varClass0 = $cssModule['test-class']
 
-let varClass1 = $style["test-class2"]
+let varClass1 = $cssModule["test-class2"]
 
-let varClass2 = $style[`test-class3`]
+let varClass2 = $cssModule[`test-class3`]
 
 
 alert('test!')

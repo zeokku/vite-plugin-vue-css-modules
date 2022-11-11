@@ -6,7 +6,7 @@ declare global {
   /**
    * Macro used to access CSS modules in script
    */
-  const $style: Record<string, string>;
+  const $cssModule: Record<string, string>;
 }
 
 export {};

@@ -5,7 +5,7 @@ import pluginFactory from "../dist/index.js";
 let nameGenerator = name => "TEST__" + name;
 
 const plugin = pluginFactory({
-  scriptTransform: true,
+  scriptTransform: false,
   nameGenerator,
 });
 

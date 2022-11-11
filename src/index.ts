@@ -43,7 +43,7 @@ const dev = process.env.NODE_ENV !== "production";
 function plugin({
   preservePrefix = "--",
   scopeBehaviour = "local",
-  scriptTransform = true,
+  scriptTransform = false,
   pugLocals = {},
   nameGenerator = dev ? devNameGeneratorContext() : prodNameGeneratorContext(),
 }: Partial<TPluginOptions> = {}): Plugin {

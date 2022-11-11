@@ -5,7 +5,7 @@ export const transformScript = (
   localNameGenerator: TLocalTransformOptions["localNameGenerator"]
 ) => {
   return code.replace(
-    /\$style(?:\[['"`]([\w\-]+)['"`]\]|\.(\w+))/g,
+    /\$cssModule(?:\[['"`]([\w\-]+)['"`]\]|\.(\w+))/g,
     (_, classNameComputed: string, classNameProp: string) => {
       // wrap in quotes
       return JSON.stringify(localNameGenerator(classNameComputed ?? classNameProp));
