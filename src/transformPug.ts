@@ -1,6 +1,6 @@
 import type { Options as TPugOptions } from "pug";
 
-import type { TLocalTransformOptions } from "./types";
+import type { TLocalTransformOptions } from "./";
 
 import { transformJsValue } from "./transformJsValue.js";
 

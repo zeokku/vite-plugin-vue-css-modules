@@ -9,9 +9,6 @@ import { transformScript } from "./transformScript.js";
 
 // import type { Options as TPugOptions } from "pug";
 
-//@todo parse5 to parse html?
-//https://lihautan.com/manipulating-ast-with-javascript/
-
 interface TPluginOptions {
   preservePrefix: string;
   scopeBehaviour: CSSModulesOptions["scopeBehaviour"];
@@ -24,6 +21,14 @@ interface TPluginOptions {
   //   options: PugOptions;
   // };
   nameGenerator: Exclude<CSSModulesOptions["generateScopedName"], string>;
+}
+
+type TLocalNameGenerator = (name: string) => string;
+
+export interface TLocalTransformOptions {
+  preservePrefix: string;
+  localNameGenerator: TLocalNameGenerator;
+  module?: string | false;
 }
 
 //@todo or switch to command === "build" ?

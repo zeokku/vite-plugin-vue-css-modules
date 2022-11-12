@@ -3,7 +3,7 @@ import _babelTraverse, { NodePath, Scope } from "@babel/traverse";
 import _babelGenerator from "@babel/generator";
 import babelTypes, { type Expression } from "@babel/types";
 
-import type { TLocalTransformOptions } from "./types";
+import type { TLocalTransformOptions } from "./";
 
 // @ts-expect-error
 const babelTraverse: typeof _babelTraverse = _babelTraverse.default;

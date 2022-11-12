@@ -1,4 +1,4 @@
-import type { TLocalTransformOptions } from "./types";
+import type { TLocalTransformOptions } from "./";
 
 export const transformScript = (
   code: string,

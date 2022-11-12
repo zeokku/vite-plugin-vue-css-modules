@@ -1,9 +1,7 @@
 import { Parser } from "htmlparser2";
 import { DomHandler } from "domhandler";
 
-import type { ChildNode, Element } from "domhandler";
-
-import type { TLocalTransformOptions } from "./types";
+import type { TLocalTransformOptions } from "./";
 
 import { transformJsValue } from "./transformJsValue.js";
 
