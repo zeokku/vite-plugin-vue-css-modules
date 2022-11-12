@@ -1,7 +1,7 @@
 {
   "name": "vite-plugin-vue-static-css-modules",
-  "description": "✨ Ultimate solution for using CSS modules without any hassle. Automatic replacement for Vue templates",
-  "version": "3.0.0",
+  "description": "✨ Ultimate solution for using CSS modules without any hassle. Automatic replacement for Vue templates and scripts",
+  "version": "3.0.1",
   "author": "Lutymane <luty@zeokku.com>",
   "funding": "https://ko-fi.com/zeokku",
   "license": "MIT",

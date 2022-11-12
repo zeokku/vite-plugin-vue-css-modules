@@ -4,7 +4,7 @@
 
 # ✨ vite-plugin-vue-static-css-modules
 
-⚡ **Ultimate solution** for using **CSS modules** without any hassle. Automatic replacement for Vue templates. You don't have to use `$style` object, just write the code as usual.
+⚡ **Ultimate solution** for using **CSS modules** without any hassle. Automatic replacement for Vue templates and scripts. You don't have to use `$style` object, just write the code as usual.
 
 ⚡ The plugin statically processes and replaces names, so there's also **no** scripting overhead due to accessing the `$style` object.
 
