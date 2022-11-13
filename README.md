@@ -52,7 +52,7 @@ The `staticCssModules()` plugin accepts an object `{}` with options:
 - `pugLocals` - an object containing variables for Pug templates **(default: `{}`)**
 - `nameGenerator` - a function of type `CSSModulesOptions["generateScopedName"]` accepting (name, filename, css) arguments. This function will be called for each name in each file and it should return a result which will be used for generating a stylesheet. It is possible that the function may be called multiple times with the same pair of name and filename, so it must maintain its own state to return the same name in such case.
 
-  The plugin provides two generators as **default** value. If `process.env.NODE_ENV !== "production"` then the generator returns `COMPONENT__CLASSNAME`, while in production another one is used that will minimize the names.
+  The plugin provides two generators as **default** value. If `process.env.NODE_ENV === "production"` then the generator will minify resulting names, otherwise during development the generator returns `COMPONENT__CLASSNAME` type of string.
 
 ## Script handling
 
@@ -72,11 +72,11 @@ If you need to access CSS modules in Javascript, you have two options:
 
    <!-- prettier-ignore -->
    ```ts
-   $style["class-name"];
+   $cssModule["class-name"];
    // OR
-   $style['class2'];
+   $cssModule['class2'];
    // OR
-   $style.anotherClass;
+   $cssModule.anotherClass;
    ```
 
 2. `useCssModule` Vue composition function. Depending on the usage of JS variables in `<template>` you may either enable or disable `scriptTransform`. If you use the result of `useCssModules()[...]` in your `<template>` then you should enable `scriptTransform`, so the plugin doesn't wrap these variables in `$style[...]`. Otherwise set it to `false`, so any other referenced variables in `<template>` will be wrapped.
