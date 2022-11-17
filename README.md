@@ -122,7 +122,7 @@ console.log("script");
 </script>
 
 <script lang="ts" setup>
-/// <reference path="vite-plugin-vue-static-css-modules/macros.d.ts" />
+/// <reference path="vite-plugin-vue-static-css-modules/macros" />
 
 const props = defineProps<{ title: string }>();
 
