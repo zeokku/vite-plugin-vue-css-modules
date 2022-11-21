@@ -42,7 +42,7 @@ export const transformPug = (
   let pugOptions: TPugOptions = {
     doctype: "html",
     compileDebug: pugLocals.dev,
-    pretty: pugLocals.dev,
+    // pretty: pugLocals.dev,
   }; /*satisfies TPugOptions*/
 
   if (!pug) resolvePug();

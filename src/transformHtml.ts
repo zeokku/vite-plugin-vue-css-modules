@@ -1,11 +1,21 @@
 import { Parser } from "htmlparser2";
-import { DomHandler } from "domhandler";
+import { DomHandler, Node, NodeWithChildren } from "domhandler";
 
 import type { TLocalTransformOptions } from "./";
 
 import { transformJsValue } from "./transformJsValue.js";
 
 import render from "dom-serializer";
+
+const trimTextNodes = (dom: DomHandler["dom"]) => {
+  for (let c of dom) {
+    if ((c as NodeWithChildren)?.children?.length) {
+      trimTextNodes((c as NodeWithChildren).children);
+    } else if (c.type === "text") {
+      c.data = c.data.trim();
+    }
+  }
+};
 
 export const transformHtml = (
   source: string,
@@ -56,9 +66,13 @@ export const transformHtml = (
       }
     }
   });
+
   const parser = new Parser(handler);
 
   parser.parseComplete(source);
+
+  // remove whitespace between tags
+  trimTextNodes(handler.dom);
 
   return render(handler.dom, {
     encodeEntities: false,

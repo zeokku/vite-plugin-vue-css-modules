@@ -92,5 +92,5 @@ export const transformJsValue = (
   });
 
   // remove ; at the end
-  return babelGenerator(ast).code.slice(0, -1);
+  return babelGenerator(ast, { minified: true }).code.slice(0, -1);
 };

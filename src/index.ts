@@ -124,10 +124,28 @@ function plugin({
             }
             break;
           default:
-            console.error(`Unsupported template language "${template.lang}"! Skipped`);
+            console.warn(
+              `[Static CSS Modules] Unsupported template language "${template.lang}"! Skipped`
+            );
 
             return;
         }
+
+        //#region correct template lines count to fix source maps (fix #2)
+
+        let templateLines = 1 + template.loc.end.line - template.loc.start.line;
+        let transformedTemplateLines = 1 + (transformedTemplate.match(/\r?\n/g)?.length ?? 0);
+
+        // @todo @bug in node.js this doesn't work and count all \r and \n separately for some reason?
+        // .match(/^/gm).length; so instead match \r\n
+
+        let templateLinesDifference = templateLines - transformedTemplateLines;
+
+        if (templateLinesDifference > 0)
+          transformedTemplate += "\n".repeat(templateLinesDifference);
+        else console.warn(`[Static CSS Modules] Resulting <template> is longer than source!`);
+
+        //#endregion
 
         let templateOffsetChange = transformedTemplate.length - template.content.length;
 
