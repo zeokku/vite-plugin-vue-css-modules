@@ -65,7 +65,7 @@ If you need to access CSS modules in Javascript, you have two options:
    If you're using Typescript, place the following code in your `env.d.ts` (or any other file) to get types support
 
    ```ts
-   /// <reference path="vite-plugin-vue-static-css-modules/macros.d.ts" />
+   /// <reference types="vite-plugin-vue-static-css-modules/macros" />
    ```
 
    The macro will be statically replaced with a resulting name string, so you can reference the variable in `<template>` as usual. Since the replacement is static you're allowed to use only the following forms:
