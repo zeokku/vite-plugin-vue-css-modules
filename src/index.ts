@@ -99,66 +99,72 @@ function plugin({
 
         let localNameGenerator = (name: string) => nameGenerator(name, id, "");
 
-        // undefined means html as well
-        template.lang ??= "html";
+        let transformedSfc = code;
 
-        let transformedTemplate: string;
+        let templateOffsetChange = 0;
 
-        switch (template.lang) {
-          case "pug":
-            {
-              transformedTemplate = transformPug(template.content, pugLocals, {
-                preservePrefix,
-                localNameGenerator,
-                module: scriptTransform ? false : "$style",
-              });
-            }
-            break;
-          case "html":
-            {
-              transformedTemplate = transformHtml(template.content, {
-                preservePrefix,
-                localNameGenerator,
-                module: scriptTransform ? false : "$style",
-              });
-            }
-            break;
-          default:
-            console.warn(
-              `[Static CSS Modules] Unsupported template language "${template.lang}"! Skipped`
-            );
+        if (template) {
+          // undefined means html as well
+          template.lang ??= "html";
 
-            return;
+          let transformedTemplate: string;
+
+          switch (template.lang) {
+            case "pug":
+              {
+                transformedTemplate = transformPug(template.content, pugLocals, {
+                  preservePrefix,
+                  localNameGenerator,
+                  module: scriptTransform ? false : "$style",
+                });
+              }
+              break;
+            case "html":
+              {
+                transformedTemplate = transformHtml(template.content, {
+                  preservePrefix,
+                  localNameGenerator,
+                  module: scriptTransform ? false : "$style",
+                });
+              }
+              break;
+            default:
+              console.warn(
+                `[Static CSS Modules] Unsupported template language "${template.lang}"! Skipped`
+              );
+
+              return;
+          }
+
+          //#region correct template lines count to fix source maps (fix #2)
+
+          let templateLines = 1 + template.loc.end.line - template.loc.start.line;
+          let transformedTemplateLines = 1 + (transformedTemplate.match(/\r?\n/g)?.length ?? 0);
+
+          // @todo @bug in node.js this doesn't work and count all \r and \n separately for some reason?
+          // .match(/^/gm).length; so instead match \r\n
+
+          let templateLinesDifference = templateLines - transformedTemplateLines;
+
+          if (templateLinesDifference > 0)
+            transformedTemplate += "\n".repeat(templateLinesDifference);
+          else console.warn(`[Static CSS Modules] Resulting <template> is longer than source!`);
+
+          //#endregion
+
+          templateOffsetChange = transformedTemplate.length - template.content.length;
+
+          // @note use slice as it's faster than replace
+          transformedSfc =
+            transformedSfc
+              .slice(0, template.loc.start.offset) //
+              .replace(`lang="${template.lang}"`, (sub: string) => {
+                templateOffsetChange -= sub.length;
+                return "";
+              }) +
+            transformedTemplate +
+            transformedSfc.slice(template.loc.end.offset);
         }
-
-        //#region correct template lines count to fix source maps (fix #2)
-
-        let templateLines = 1 + template.loc.end.line - template.loc.start.line;
-        let transformedTemplateLines = 1 + (transformedTemplate.match(/\r?\n/g)?.length ?? 0);
-
-        // @todo @bug in node.js this doesn't work and count all \r and \n separately for some reason?
-        // .match(/^/gm).length; so instead match \r\n
-
-        let templateLinesDifference = templateLines - transformedTemplateLines;
-
-        if (templateLinesDifference > 0)
-          transformedTemplate += "\n".repeat(templateLinesDifference);
-        else console.warn(`[Static CSS Modules] Resulting <template> is longer than source!`);
-
-        //#endregion
-
-        let templateOffsetChange = transformedTemplate.length - template.content.length;
-
-        // @note use slice as it's faster than replace
-        let transformedSfc =
-          code
-            .slice(0, template.loc.start.offset) //
-            .replace(`lang="${template.lang}"`, (sub: string) => {
-              templateOffsetChange -= sub.length;
-              return "";
-            }) +
-          transformedTemplate +
-          code.slice(template.loc.end.offset);
 
         if (scriptTransform) {
           let scriptSetupOffsetChange = 0;
@@ -168,12 +174,13 @@ function plugin({
 
             scriptSetupOffsetChange = transformedScriptSetup.length - scriptSetup.content.length;
 
-            let offset =
-              scriptSetup.loc.start.offset < template.loc.start.offset
+            let offset = template
+              ? scriptSetup.loc.start.offset < template.loc.start.offset
                 ? // if script setup before template
                   0
                 : //after template
-                  templateOffsetChange;
+                  templateOffsetChange
+              : 0;
 
             transformedSfc =
               transformedSfc.slice(0, scriptSetup.loc.start.offset + offset) +
@@ -187,8 +194,11 @@ function plugin({
             let offset = 0;
 
             // add offset caused by template transform
-            offset +=
-              script.loc.start.offset < template.loc.start.offset ? 0 : templateOffsetChange;
+            offset += template
+              ? script.loc.start.offset < template.loc.start.offset
+                ? 0
+                : templateOffsetChange
+              : 0;
 
             // add offset caused by script setup transform
             if (scriptSetup) {
