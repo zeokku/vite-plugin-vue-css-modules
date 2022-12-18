@@ -67,7 +67,9 @@ export const transformHtml = (
     }
   });
 
-  const parser = new Parser(handler);
+  const parser = new Parser(handler, {
+    xmlMode: true,
+  });
 
   parser.parseComplete(source);
 

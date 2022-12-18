@@ -20,6 +20,18 @@
     <div id="--escaped1"> </div>
     <div :--class="someRawVar"></div>
     <div :--id="someRawVar2"></div>
+    <!-- test from issue #3 -->
+    <div class="group form-body">
+        <auth-title />
+        <auth-title />
+        <auth-title />
+        <!-- <div class="item"><auth-form /></div> -->
+    </div>
+    <div>
+        <auth-title></auth-title>
+        <auth-title></auth-title>
+        <auth-title></auth-title>
+    </div>
 </template>
 
 <script lang="ts">
