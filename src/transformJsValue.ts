@@ -1,14 +1,14 @@
 import babelParser from "@babel/parser";
-import _babelTraverse, { NodePath, Scope } from "@babel/traverse";
-import _babelGenerator from "@babel/generator";
+import babelTraverse, { NodePath, Scope } from "@babel/traverse";
+import babelGenerator from "@babel/generator";
 import babelTypes, { type Expression } from "@babel/types";
 
 import type { TLocalTransformOptions } from "./";
 
-// @ts-expect-error
-const babelTraverse: typeof _babelTraverse = _babelTraverse.default;
-// @ts-expect-error
-const babelGenerator: typeof _babelGenerator = _babelGenerator.default;
+// @ts-ignore
+// const babelTraverse: typeof _babelTraverse = _babelTraverse.default;
+// @ts-ignore
+// const babelGenerator: typeof _babelGenerator = _babelGenerator.default;
 
 const generateModuleAccess = (path: NodePath<Expression>, module: string | false) => {
   if (module) {
@@ -68,8 +68,8 @@ export const transformJsValue = (
         if (parentPath.node.computed) {
           generateModuleAccess(path, module);
         } else {
-          // if(!node.name.startsWidth(preservePrefix)) // @todo ?
-          path.replaceWith(babelTypes.stringLiteral(localNameGenerator(node.name)));
+          if (!node.name.startsWith(preservePrefix))
+            path.replaceWith(babelTypes.stringLiteral(localNameGenerator(node.name)));
         }
 
         // skip processing modified node
@@ -78,8 +78,7 @@ export const transformJsValue = (
     },
 
     StringLiteral({ node }) {
-      // @todo ? preservePrefix
-      node.value = localNameGenerator(node.value);
+      if (!node.value.startsWith(preservePrefix)) node.value = localNameGenerator(node.value);
     },
 
     TemplateElement(path) {

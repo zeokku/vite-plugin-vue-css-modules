@@ -52,6 +52,16 @@ export const transformHtml = (
             delete attribs[key];
           }
           break;
+
+        // escaped static
+        case `${preservePrefix}class`:
+        case `${preservePrefix}id`:
+          {
+            attribs[key.slice(preservePrefix.length)] = attribs[key];
+            delete attribs[key];
+          }
+          break;
+
         // dynamic
         case ":class":
         case ":id":

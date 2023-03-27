@@ -112,11 +112,15 @@ function plugin({
           switch (template.lang) {
             case "pug":
               {
-                transformedTemplate = transformPug(template.content, pugLocals, {
-                  preservePrefix,
-                  localNameGenerator,
-                  module: scriptTransform ? false : "$style",
-                });
+                transformedTemplate = transformPug(
+                  template.content,
+                  {
+                    preservePrefix,
+                    localNameGenerator,
+                    module: scriptTransform ? false : "$style",
+                  },
+                  pugLocals
+                );
               }
               break;
             case "html":

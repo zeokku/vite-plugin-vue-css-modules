@@ -36,8 +36,8 @@ const parseQuotedValue = (val: string) =>
 
 export const transformPug = (
   source: string,
-  pugLocals: Record<string, any>,
-  { preservePrefix, localNameGenerator, module }: TLocalTransformOptions
+  { preservePrefix, localNameGenerator, module }: TLocalTransformOptions,
+  pugLocals: Record<string, any> = {}
 ) => {
   let pugOptions: TPugOptions = {
     doctype: "html",
@@ -76,6 +76,12 @@ export const transformPug = (
           case `:${preservePrefix}class`:
           case `:${preservePrefix}id`:
             attr.name = ":" + attr.name.slice(1 + preservePrefix.length);
+            break;
+
+          // escaped static
+          case `${preservePrefix}class`:
+          case `${preservePrefix}id`:
+            attr.name = attr.name.slice(preservePrefix.length);
             break;
 
           // dynamic
