@@ -134,7 +134,7 @@ function plugin({
               break;
             default:
               console.warn(
-                `[Static CSS Modules] Unsupported template language "${template.lang}"! Skipped`
+                `[CSS Modules] Unsupported template language "${template.lang}"! Skipped`
               );
 
               return;
@@ -152,7 +152,7 @@ function plugin({
 
           if (templateLinesDifference > 0)
             transformedTemplate += "\n".repeat(templateLinesDifference);
-          else console.warn(`[Static CSS Modules] Resulting <template> is longer than source!`);
+          else console.warn(`[CSS Modules] Resulting <template> is longer than source!`);
 
           //#endregion
 
@@ -228,8 +228,8 @@ function plugin({
 
 export {
   plugin as default, //
-  plugin,
-  TPluginOptions,
+  plugin as cssm,
+  type TPluginOptions,
 };
 
 export {
@@ -239,5 +239,5 @@ export {
 
 export {
   removeCssModulesChunk, //
-  TRemoveCssModulesChunkOptions,
+  type TRemoveCssModulesChunkOptions,
 } from "./removeCssModulesChunk.js";
