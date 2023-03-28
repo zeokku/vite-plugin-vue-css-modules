@@ -6,6 +6,19 @@ import type { TPluginOptions } from ".";
 // filename
 // C:/.../src/views/About.vue?vue&type=style&index=0&lang.module.less
 
+// https://bobbyhadz.com/blog/javascript-remove-file-extension-from-string
+const removeExtension = (filename: string) => {
+  return filename.substring(0, filename.lastIndexOf(".")) || filename;
+};
+
+const deriveScope = (filename: string) =>
+  path
+    .relative("./src/", removeExtension(filename.split("?")[0]))
+    // @note prefix instead of long paths
+    .replace(/components[\\/]/, "C")
+    .replace(/views[\\/]/, "V")
+    .replace(/[\\/]/g, "_");
+
 const prodNameGeneratorContext = (): TPluginOptions["nameGenerator"] => {
   let namesMap: Record<string, string> = {};
 
@@ -16,37 +29,36 @@ const prodNameGeneratorContext = (): TPluginOptions["nameGenerator"] => {
 
   //the function is called for each CSS rule, so cache the pairs of minified name with og name
   return (name, filename) => {
-    //split path by /src/
-    //let pathParts = filepath.split(/[\/\\]src[\/\\]|/g);
-
-    //get shorter filename e.g. "views/Home.vue" or full file path in case of custom project structure
-    //let filename = pathParts.length == 2 ? pathParts[1] : pathParts[0];
-
-    //remove query params and append rule name using : (forbidden for paths)
-    let key = filename.split("?", 2)[0] + ":" + name;
+    let key = name.split("__", 2).length === 2 ? name : deriveScope(filename) + "__" + name;
 
     if (namesMap[key]) return namesMap[key];
 
-    let newName;
+    for (;;) {
+      let newName = generateName();
 
-    do {
-      newName = generateName();
-    } while (
-      //hyphen prefixes are reserved for vendor classes, also it can't start with a digit
-      //in addition exclude ^ad or any _ad, -ad constructions to avoid adblock problem
-      /^[-\d]|(?:[-_]+|^)ad/.test(newName)
-    );
+      // @note hyphen prefixes are reserved for vendor classes, also it can't start with a digit
+      // in addition exclude ^ad or any _ad, -ad constructions to avoid adblock problem
+      if (!/^[-\d]|(?:[-_]+|^)ad/.test(newName)) {
+        namesMap[key] = newName;
 
-    namesMap[key] = newName;
-
-    return newName;
+        return newName;
+      }
+    }
   };
-  // @todo satisfies PluginOptions['nameGenerator'];
+  // satisfies TPluginOptions['nameGenerator'];
 };
 
 const devNameGeneratorContext = (): TPluginOptions["nameGenerator"] => {
   return (name, filename) => {
-    return path.basename(filename).split(".")[0] + "__" + name;
+    let provided = name.split("__", 2);
+
+    if (provided.length === 2) {
+      return name;
+    } else {
+      let scope = deriveScope(filename);
+
+      return scope + "__" + name;
+    }
   };
 };
 
