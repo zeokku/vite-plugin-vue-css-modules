@@ -28,3 +28,18 @@ ended up just using parse and `.slice(0, -1)` to remove the semicolon
 # @todo css dictionary names
 
 # idea to enable script transform as `<script css-module-transform>` tag attribute?
+
+# !!! allow linking class names from other components
+
+options:
+
+```js
+{
+    linkingPrefix: '-',
+    linkingDir: '_',
+    linkingSeparator: '--'
+}
+```
+
+// link from /src/
+`.-components_menu_button--wrap` - link `.wrap` class from `/src/components/menu/Button.vue

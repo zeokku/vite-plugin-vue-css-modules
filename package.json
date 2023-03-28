@@ -1,7 +1,7 @@
 {
-  "name": "vite-plugin-vue-static-css-modules",
+  "name": "vite-plugin-vue-css-modules",
   "description": "✨ Ultimate solution for using CSS modules without any hassle. Automatic replacement for Vue templates and scripts",
-  "version": "3.0.4",
+  "version": "3.1.0",
   "author": "Lutymane <luty@zeokku.com>",
   "funding": "https://ko-fi.com/zeokku",
   "license": "MIT",
@@ -11,13 +11,14 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
-    "test": "node ./test"
+    "test:static": "node ./test",
+    "test": "vitest --watch"
   },
   "files": [
     "dist/*",
     "macros.d.ts"
   ],
-  "repository": "github:zeokku/vite-plugin-vue-static-css-modules",
+  "repository": "github:zeokku/vite-plugin-vue-css-modules",
   "keywords": [
     "vite",
     "vite-plugin",
@@ -32,22 +33,23 @@
   ],
   "devDependencies": {
     "@types/babel__generator": "^7.6.4",
-    "@types/babel__traverse": "^7.18.2",
-    "@types/node": "^16.18.3",
+    "@types/babel__traverse": "^7.18.3",
+    "@types/node": "^18.15.10",
     "@types/pug": "^2.0.6",
-    "@vue/compiler-sfc": "^3.2.41",
+    "@vue/compiler-sfc": "^3.2.47",
     "pug": "^3.0.2",
-    "typescript": "^4.9.2-rc",
-    "vite": "^3.2.3"
+    "typescript": "^5.0.2",
+    "vite": "^4.2.1",
+    "vitest": "^0.29.7"
   },
   "dependencies": {
-    "@babel/generator": "^7.20.3",
-    "@babel/parser": "^7.20.3",
-    "@babel/traverse": "^7.20.1",
-    "@babel/types": "^7.20.2",
+    "@babel/generator": "^7.21.3",
+    "@babel/parser": "^7.21.3",
+    "@babel/traverse": "^7.21.3",
+    "@babel/types": "^7.21.3",
     "dom-serializer": "^2.0.0",
     "domhandler": "^5.0.3",
-    "htmlparser2": "^8.0.1",
+    "htmlparser2": "^8.0.2",
     "incstr": "^1.2.3"
   },
   "optionalDependencies": {
@@ -58,7 +60,7 @@
     "@vue/compiler-sfc": "^3.0.0"
   },
   "bugs": {
-    "url": "https://github.com/zeokku/vite-plugin-vue-static-css-modules/issues"
+    "url": "https://github.com/zeokku/vite-plugin-vue-css-modules/issues"
   },
-  "homepage": "https://github.com/zeokku/vite-plugin-vue-static-css-modules#readme"
+  "homepage": "https://github.com/zeokku/vite-plugin-vue-css-modules#readme"
 }
