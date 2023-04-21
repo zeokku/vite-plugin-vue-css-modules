@@ -28,7 +28,9 @@ import { cssm, removeCssModulesChunk } from "vite-plugin-vue-css-modules";
 export default defineConfig({
   plugins: [
     //...,
-    cssm(),
+    cssm({
+      scriptTransform: true,
+    }),
     vue(),
     // optionally
     removeCssModulesChunk(),
