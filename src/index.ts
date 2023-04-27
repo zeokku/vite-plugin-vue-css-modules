@@ -92,12 +92,14 @@ function plugin({
         // );
 
         //skip sfc if there's no module styles
-        // @todo let styleModule: string | boolean = s.module;
-        if (!styles.find(s => s.module)) {
+        // @todo let styleModuleName: string | boolean = s.module;
+        let styleModule = styles.find(s => s.module);
+
+        if (!styleModule) {
           return;
         }
 
-        let localNameGenerator = (name: string) => nameGenerator(name, id, "");
+        let localNameGenerator = (name: string) => nameGenerator(name, id, styleModule.content);
 
         let transformedSfc = code;
 
