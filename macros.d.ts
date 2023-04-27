@@ -6,7 +6,7 @@ declare global {
   /**
    * Macro used to access CSS modules in script
    */
-  const $cssModule: Record<string, string>;
+  const $cssModule: Readonly<Record<string, string>>;
 }
 
 export {};
