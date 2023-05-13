@@ -1,7 +1,7 @@
 {
   "name": "vite-plugin-vue-css-modules",
   "description": "✨ Ultimate solution for using CSS modules without any hassle. Automatic replacement for Vue templates and scripts",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "author": "Lutymane <luty@zeokku.com>",
   "funding": "https://ko-fi.com/zeokku",
   "license": "MIT",
@@ -22,14 +22,14 @@
   "keywords": [
     "vite",
     "vite-plugin",
+    "css",
+    "modules",
     "optimization",
     "minimization",
     "minification",
     "vue",
     "sfc",
-    "pug",
-    "css",
-    "modules"
+    "pug"
   ],
   "devDependencies": {
     "@types/babel__generator": "^7.6.4",
