@@ -33,20 +33,21 @@
   ],
   "devDependencies": {
     "@types/babel__generator": "^7.6.4",
-    "@types/babel__traverse": "^7.18.3",
-    "@types/node": "^18.15.10",
+    "@types/babel__traverse": "^7.18.5",
+    "@types/node": "^18.16.3",
     "@types/pug": "^2.0.6",
     "@vue/compiler-sfc": "^3.2.47",
+    "@vue/shared": "^3.2.47",
     "pug": "^3.0.2",
-    "typescript": "^5.0.2",
-    "vite": "^4.2.1",
-    "vitest": "^0.29.7"
+    "typescript": "^5.0.4",
+    "vite": "^4.3.4",
+    "vitest": "^0.31.0"
   },
   "dependencies": {
-    "@babel/generator": "^7.21.3",
-    "@babel/parser": "^7.21.3",
-    "@babel/traverse": "^7.21.3",
-    "@babel/types": "^7.21.3",
+    "@babel/generator": "^7.21.5",
+    "@babel/parser": "^7.21.8",
+    "@babel/traverse": "^7.21.5",
+    "@babel/types": "^7.21.5",
     "dom-serializer": "^2.0.0",
     "domhandler": "^5.0.3",
     "htmlparser2": "^8.0.2",
@@ -57,7 +58,8 @@
     "pug-walk": "^2.0.0"
   },
   "peerDependencies": {
-    "@vue/compiler-sfc": "^3.0.0"
+    "@vue/compiler-sfc": "^3.0.0",
+    "@vue/shared": "^3.2.47"
   },
   "bugs": {
     "url": "https://github.com/zeokku/vite-plugin-vue-css-modules/issues"

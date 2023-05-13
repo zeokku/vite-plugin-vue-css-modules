@@ -55,7 +55,7 @@ function plugin({
   pugLocals.dev = dev;
 
   return {
-    name: "Vue Static CSS Modules",
+    name: "Vue CSS Modules",
 
     // patch config with css module options
     // this is called only once (or when config file changes)

@@ -1,8 +1,6 @@
 import type { TLocalTransformOptions } from "./";
 
-// @vue/compiler-sfc
-const hyphenateRE = /\B([A-Z])/g;
-const hyphenate = (str: string) => str.replace(hyphenateRE, "-$1").toLowerCase();
+import { hyphenate } from "@vue/shared";
 
 export const transformScript = (
   code: string,
