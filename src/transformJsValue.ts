@@ -1,13 +1,9 @@
 import babelParser from "@babel/parser";
-import * as _babelTraverse from "@babel/traverse";
-import type { NodePath } from "@babel/traverse";
-import * as _babelGenerator from "@babel/generator";
+import babelTraverse, { type NodePath } from "@babel/traverse";
+import babelGenerator from "@babel/generator";
 import babelTypes, { type Expression } from "@babel/types";
 
 import type { TLocalTransformOptions } from "./";
-
-const babelTraverse = _babelTraverse.default;
-const babelGenerator = _babelGenerator.default;
 
 const generateModuleAccess = (path: NodePath<Expression>, module: string | false) => {
   if (module) {
