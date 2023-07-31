@@ -31,7 +31,6 @@ export default defineConfig({
     cssm({
       scriptTransform: true,
     }),
-    vue(),
     // optionally
     removeCssModulesChunk(),
     //...
@@ -39,8 +38,6 @@ export default defineConfig({
   //...
 });
 ```
-
-Notice that the plugin should go **BEFORE** `vue()` plugin, so it could transform `<template>` and `<script>` blocks.
 
 If you used `<style scoped>` before, the plugin should work out of the box without any additional settings, just replace `scoped` by `module`.
 

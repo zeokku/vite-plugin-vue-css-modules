@@ -57,6 +57,9 @@ function plugin({
   return {
     name: "Vue CSS Modules",
 
+    // execute hooks before vue() plugin
+    enforce: "pre",
+
     // patch config with css module options
     // this is called only once (or when config file changes)
     config() {

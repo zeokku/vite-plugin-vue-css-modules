@@ -14,9 +14,11 @@ const removeExtension = (filename: string) => {
 const deriveScope = (filename: string) =>
   path
     .relative("./src/", removeExtension(filename.split("?")[0]))
+    // @note replace leading dots in case of files not being in src directory
+    .replace(/^\.+[\\/]/, "")
     // @note prefix instead of long paths
-    .replace(/components[\\/]/, "C")
-    .replace(/views[\\/]/, "V")
+    .replace(/^components[\\/]/, "C")
+    .replace(/^views[\\/]/, "V")
     .replace(/[\\/]/g, "_");
 
 const prodNameGeneratorContext = (): TPluginOptions["nameGenerator"] => {
