@@ -1,7 +1,12 @@
-import babelParser from "@babel/parser";
-import babelTraverse, { type NodePath } from "@babel/traverse";
+import * as babelParser from "@babel/parser";
+
+import babelTraverse from "@babel/traverse";
+import type { NodePath } from "@babel/traverse";
+
 import babelGenerator from "@babel/generator";
-import babelTypes, { type Expression } from "@babel/types";
+
+import * as babelTypes from "@babel/types";
+import type { Expression } from "@babel/types";
 
 import type { TLocalTransformOptions } from "./";
 
