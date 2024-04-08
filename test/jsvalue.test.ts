@@ -54,6 +54,14 @@ const testValue = (value: string, options: TLocalTransformOptions, cb: (result: 
       )
     });
 
+    testValue("variable === '' || 'class'", opt, r => {
+      // prettier-ignore
+      assert.equal(r,
+        // @note no idea why babel changes quotes of empty strings
+        `variable===""||${qng("class")}`
+      );
+    });
+
     testValue("[{ a: f0 }, { c }, 'd', `e`, varClass]", opt, r => {
       // prettier-ignore
       assert.equal(r, 

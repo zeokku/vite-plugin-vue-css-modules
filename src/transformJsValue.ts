@@ -77,7 +77,10 @@ export const transformJsValue = (
       }
     },
 
-    StringLiteral({ node }) {
+    StringLiteral({ node, parentPath }) {
+      // @note skip comparisons variable === '' and etc, because these strings are not related to classnames
+      if (parentPath.isBinaryExpression()) return;
+
       if (!node.value.startsWith(preservePrefix)) node.value = localNameGenerator(node.value);
     },
 
