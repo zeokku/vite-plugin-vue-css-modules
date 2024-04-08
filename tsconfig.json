@@ -18,6 +18,7 @@
     "node_modules",
     "dist",
     "src/experimentalGenerator.ts",
+    "src/transformPug2.ts"
     //@todo transformPug.ts
   ]
 }
