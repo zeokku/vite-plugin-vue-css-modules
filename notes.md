@@ -43,3 +43,7 @@ options:
 
 // link from /src/
 `.-components_menu_button--wrap` - link `.wrap` class from `/src/components/menu/Button.vue
+
+# to use magic string for pug templates
+
+you will have to pass original source code too and work with it instead

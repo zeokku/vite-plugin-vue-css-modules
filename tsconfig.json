@@ -10,6 +10,14 @@
     "moduleResolution": "Node",
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src/*.ts", "src/*.d.ts"],
-  "exclude": ["node_modules", "dist", "src/experimentalGenerator.ts"]
+  "include": [
+    "src/*.ts",
+    "src/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/experimentalGenerator.ts",
+    //@todo transformPug.ts
+  ]
 }
