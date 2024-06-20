@@ -81,7 +81,11 @@ export const transformJsValue = (
       // @note skip comparisons variable === '' and etc, because these strings are not related to classnames
       if (parentPath.isBinaryExpression()) return;
 
-      if (!node.value.startsWith(preservePrefix)) node.value = localNameGenerator(node.value);
+      if (node.value.startsWith(preservePrefix)) {
+        node.value = node.value.slice(preservePrefix.length);
+      } else {
+        node.value = localNameGenerator(node.value);
+      }
     },
 
     TemplateElement(path) {

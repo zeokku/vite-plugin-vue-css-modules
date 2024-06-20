@@ -29,7 +29,7 @@ const testValue = (value: string, options: TLocalTransformOptions, cb: (result: 
     });
 
     testValue(`'--escaped'`, opt, r => {
-      assert.equal(r, q("--escaped"));
+      assert.equal(r, q("escaped"));
     });
 
     testValue("f ? 'x' : `y`", opt, r => {
@@ -71,6 +71,13 @@ const testValue = (value: string, options: TLocalTransformOptions, cb: (result: 
       );
     });
 
+    testValue("flag ? ['--escaped', 'class0'] : []", opt, r => {
+      // prettier-ignore
+      assert.equal(r, 
+        `flag?["escaped",${qng('class0')}]:[]`
+      );
+    });
+
     testValue(`{ [computed]: toggle0, static: toggle1, 'string-const': toggle2 }`, opt, r => {
       // prettier-ignore
       assert.equal(r, 
@@ -82,7 +89,7 @@ const testValue = (value: string, options: TLocalTransformOptions, cb: (result: 
     });
 
     testValue(`{ '--escaped': toggle0 }`, opt, r => {
-      assert.equal(r, `({"--escaped":toggle0})`);
+      assert.equal(r, `({"escaped":toggle0})`);
     });
   });
 });

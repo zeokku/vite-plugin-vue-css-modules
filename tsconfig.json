@@ -8,15 +8,11 @@
     "declaration": true,
     "outDir": "dist",
     "moduleResolution": "Node",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true
   },
-  "include": [
-    "src/*.ts",
-    "src/*.d.ts"
-  ],
+  "include": ["src/*.ts", "src/*.d.ts"],
   "exclude": [
-    "node_modules",
-    "dist",
     "src/experimentalGenerator.ts",
     "src/transformPug2.ts"
     //@todo transformPug.ts
