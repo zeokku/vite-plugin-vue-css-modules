@@ -68,8 +68,9 @@ export const transformJsValue = (
         if (parentPath.node.computed) {
           generateModuleAccess(path, module);
         } else {
-          if (!node.name.startsWith(preservePrefix))
-            path.replaceWith(babelTypes.stringLiteral(localNameGenerator(node.name)));
+          if (node.name.startsWith(preservePrefix))
+            path.replaceWith(babelTypes.stringLiteral(node.name.slice(preservePrefix.length)));
+          else path.replaceWith(babelTypes.stringLiteral(localNameGenerator(node.name)));
         }
 
         // skip processing modified node

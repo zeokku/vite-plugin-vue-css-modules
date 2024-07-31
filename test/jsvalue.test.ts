@@ -95,5 +95,14 @@ const testValue = (value: string, options: TLocalTransformOptions, cb: (result: 
     testValue(`{ '--escaped': toggle0 }`, opt, r => {
       assert.equal(r, `({"escaped":toggle0})`);
     });
+
+    opt = {
+      ...o("$"),
+      module,
+    };
+
+    testValue(`{ $escaped: toggle0 }`, opt, r => {
+      assert.equal(r, `({"escaped":toggle0})`);
+    });
   });
 });
