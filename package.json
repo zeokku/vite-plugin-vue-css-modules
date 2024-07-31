@@ -1,7 +1,7 @@
 {
   "name": "vite-plugin-vue-css-modules",
   "description": "✨ Ultimate solution for using CSS modules without any hassle. Automatic replacement for Vue templates and scripts",
-  "version": "3.1.7",
+  "version": "3.1.8",
   "author": "Lutymane <luty@zeokku.com>",
   "funding": "https://ko-fi.com/zeokku",
   "license": "MIT",
