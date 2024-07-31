@@ -78,8 +78,8 @@ export const transformJsValue = (
     },
 
     StringLiteral({ node, parentPath }) {
-      // @note skip comparisons variable === '' and etc, because these strings are not related to classnames
-      if (parentPath.isBinaryExpression()) return;
+      // @note skip comparisons variable === '', function calls fn('str'), because these strings are not related to classnames
+      if (parentPath.isBinaryExpression() || parentPath.isCallExpression()) return;
 
       if (node.value.startsWith(preservePrefix)) {
         node.value = node.value.slice(preservePrefix.length);
