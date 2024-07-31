@@ -66,6 +66,10 @@ const testValue = (value: string, options: TLocalTransformOptions, cb: (result: 
       assert.equal(r, `s1.normalize("NFKD")===s2.normalize("NFKD")&&${qng("classname")}`);
     });
 
+    testValue("s1?.normalize('NFKD') === s2.normalize('NFKD') && 'classname'", opt, r => {
+      assert.equal(r, `s1?.normalize("NFKD")===s2.normalize("NFKD")&&${qng("classname")}`);
+    });
+
     testValue("[{ a: f0 }, { c }, 'd', `e`, varClass]", opt, r => {
       // prettier-ignore
       assert.equal(r, 
