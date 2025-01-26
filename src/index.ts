@@ -98,11 +98,11 @@ function plugin({
         // @todo let styleModuleName: string | boolean = s.module;
         let styleModule = styles.find(s => s.module);
 
-        if (!styleModule) {
+        if (!styleModule && !template.attrs['css-modules']) {
           return;
         }
 
-        let localNameGenerator = (name: string) => nameGenerator(name, id, styleModule.content);
+        let localNameGenerator = (name: string) => nameGenerator(name, id, styleModule?.content ?? '');
 
         let transformedSfc = code;
 
