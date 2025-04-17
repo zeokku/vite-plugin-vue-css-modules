@@ -78,7 +78,7 @@ function plugin({
 
         const styleModule = styles.find(s => s.module);
         const styleModuleName =
-          typeof styleModule.module === "string"
+          typeof styleModule?.module === "string"
             ? styleModule.module
             : "$style";
 
