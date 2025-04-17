@@ -1,8 +1,9 @@
 import { assert, describe, expect, test } from "vitest";
-import { md, ng, nows, o, qng } from "./utils";
+import { sqng, dqng, bqng, md, ng, o } from "./utils";
 
 import type { TLocalTransformOptions } from "../src";
 import { transformPug } from "../src/transformPug2";
+import { MagicString } from "@vue/compiler-sfc";
 
 (["$style", false] as const).forEach(module =>
   describe(`pug complex (module: ${module})`, () => {
@@ -27,7 +28,7 @@ import { transformPug } from "../src/transformPug2";
     div(:class='"class5"')
     div(:class="v ? 'class6' : \`class7\`")
 
-div(:class="[{b: v}, {cv}, 'c', \`d\`, nop]") Yop
+div(:class='[{b: v}, {cv}, "c", \`d\`, nop]') Yop
 
 span(:class=\`{
     [computed] : toggle0,
@@ -45,33 +46,38 @@ div(:class="v0 ? 'class8' : v1 ? 'class9' : v2 ? class10 :'class11'")
 div(:--class="someRawVar")
 div(:--id="someRawVar2")`;
 
-      let r = transformPug(fixture, opt);
+      const sfcTransform = new MagicString(fixture);
+
+      transformPug(fixture, 0, sfcTransform, opt);
+
+      let transformed = sfcTransform.toString();
 
       //prettier-ignore
       const expected = 
-`.${ng("class0")}.${ng("class2")}(:class='${md('varClass', module)}')
+`.${ng("class0")}.${ng("class2")}(:class="${md('varClass', module)}")
   #${ng("id0")}.${ng("class3")} test
     div(class="${ng('aa')}", id='bbb')
 
-  .${ng("class")}(:class='${nows`variable ? ${qng('a')} : ${qng('b', '`')}`}') multiline whitespaces
+  .${ng("class")}(:class =
+         "variable ? ${sqng('a')} : ${bqng('b')}") multiline whitespaces
 
 .${ng("class0")} 
-    div(:class='${md('varClass', module)}')
-    div(:id='${md('aaaid', module)}' :class='${qng('class4')}')
-    div(:class='${qng("class5")}')
-    div(:class='${nows`v ? ${qng('class6')} : ${qng('class7', '`')}`}')
+    div(:class="${md('varClass', module)}")
+    div(:id="${md('aaaid', module)}" :class="${sqng('class4')}")
+    div(:class='${dqng("class5")}')
+    div(:class="v ? ${sqng('class6')} : ${bqng('class7')}")
 
-div(:class='${nows`[{${qng('b')}: v}, {${qng('cv')}: cv}, ${qng('c')}, ${qng('d', '`')}, ${md('nop', module)}]`}') Yop
+div(:class='[{${dqng('b')}: v}, {${dqng('cv')}: cv}, ${dqng('c')}, ${bqng('d')}, ${md('nop', module)}]') Yop
 
-span(:class='(${nows`{
+span(:class=\`{
     [${md('computed', module)}] : toggle0,
-    ${qng('static')}: toggle1,
-    ${qng('string-const')}: toggle2,
-    ${qng("another-one")} : toggle3
-}`})')
+    ${dqng('static')}: toggle1,
+    ${sqng('string-const')}:toggle2,
+    ${dqng("another-one")} :toggle3
+}\`)
 
-div(:class='${nows`v0 ? ${qng('class8')} : v1 ? ${qng('class9')} : v2 ? ${md('class10', module)} : ${qng('class11')}`}')
-    div(:class='${nows`v0 ? ${md('varClass0', module)} : ${md('varClass1', module)}`}') Now this is processed
+div(:class="v0 ? ${sqng('class8')} : v1 ? ${sqng('class9')} : v2 ? ${md('class10', module)} :${sqng('class11')}")
+    div(:class="v0 ? ${md('varClass0', module)} : ${md('varClass1', module)}") Now this is processed
 
 .escaped0 
 #escaped1 
@@ -79,7 +85,7 @@ div(:class='${nows`v0 ? ${qng('class8')} : v1 ? ${qng('class9')} : v2 ? ${md('cl
 div(:class="someRawVar")
 div(:id="someRawVar2")`
 
-      assert.equal(r.code, expected);
+      assert.equal(transformed, expected);
     });
   })
 );

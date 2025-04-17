@@ -1,25 +1,29 @@
 import { Plugin, CSSModulesOptions } from "vite";
 
-import { devNameGeneratorContext, prodNameGeneratorContext } from "./nameGenerators.js";
+import {
+  devNameGeneratorContext,
+  prodNameGeneratorContext,
+} from "./nameGenerators.js";
 
-import { parse as sfcParse } from "@vue/compiler-sfc";
-import { transformPug } from "./transformPug.js";
-import { transformHtml } from "./transformHtml.js";
+import { MagicString, parse as sfcParse } from "@vue/compiler-sfc";
+import { transformPug } from "./transformPug2.js";
+import { transformHtml } from "./transformHtml2.js";
 import { transformScript } from "./transformScript.js";
 
 // import type { Options as TPugOptions } from "pug";
 
 interface TPluginOptions {
+  /**
+   * String to use as a prefix for skipping transformation of names. The prefix is removed in the resulting code.
+   */
   preservePrefix: string;
-  scopeBehaviour: CSSModulesOptions["scopeBehaviour"];
+  /**
+   * You can use `$cssModule.className` macro, which will be statically replaced in your script with the resulting CSS module name if this flag is `true` (default).
+   */
   scriptTransform: boolean;
-
-  pugLocals: Record<string, any>;
-
-  // pug: {
-  //   locals?: Record<string, string>;
-  //   options: PugOptions;
-  // };
+  /**
+   * Function returning a unique name for a unique input. It must maintain its internal state to return the same result for subsequent calls with identical input
+   */
   nameGenerator: Exclude<CSSModulesOptions["generateScopedName"], string>;
 }
 
@@ -32,28 +36,19 @@ export interface TLocalTransformOptions {
 }
 
 //@todo or switch to command === "build" ?
-const dev = process.env.NODE_ENV !== "production";
+const IS_DEVELOPMENT = process.env.NODE_ENV !== "production";
 /**
- *
- * @param options object with optional properties:
- *
- * **`preservePrefix`** - string to use as a prefix for keeping the names raw, the prefix is removed in the resulting code
- *
- * **`scriptTransform`** - you can use `$useCssModule('className')` macro, which will be statically replaced in your script (if this flag is `true`) with the resulting CSS module name. It's recommended to enable this only for production to save processing time during the development
- *
- * **`nameGenerator`** - function returning a unique name for a unique input. It must maintain its internal state to return the same result for subsequent calls with identical input
+ * @param options Object with optional properties
  *
  * @returns Vite plugin object
  */
 function plugin({
   preservePrefix = "--",
-  scopeBehaviour = "local",
-  scriptTransform = false,
-  pugLocals = {},
-  nameGenerator = dev ? devNameGeneratorContext() : prodNameGeneratorContext(),
+  scriptTransform = true,
+  nameGenerator = IS_DEVELOPMENT
+    ? devNameGeneratorContext()
+    : prodNameGeneratorContext(),
 }: Partial<TPluginOptions> = {}): Plugin {
-  pugLocals.dev = dev;
-
   return {
     name: "Vue CSS Modules",
 
@@ -66,7 +61,6 @@ function plugin({
       return {
         css: {
           modules: {
-            scopeBehaviour,
             generateScopedName: nameGenerator,
           },
         },
@@ -75,68 +69,64 @@ function plugin({
 
     transform(code, id) {
       if (id.match(/\.vue$/)) {
-        let {
+        // @note normalize line endings to avoid offset issues working with pug lexer...
+        code = code.replace(/\r\n/g, "\n");
+
+        const {
           descriptor: { template, script, scriptSetup, styles },
         } = sfcParse(code);
 
-        // console.log(
-        //   template.content.length,
-        //   template.loc.end.offset - template.loc.start.offset,
-        //   JSON.stringify(
-        //     sfcParse(code),
-        //     (key, value) => {
-        //       if (["source", "content", "mappings", "ast", "sourcesContent"].includes(key))
-        //         return "<<omitted>>";
+        const styleModule = styles.find(s => s.module);
+        const styleModuleName =
+          typeof styleModule.module === "string"
+            ? styleModule.module
+            : "$style";
 
-        //       return value;
-        //     },
-        //     4
-        //   )
-        // );
-
-        //skip sfc if there's no module styles
-        // @todo let styleModuleName: string | boolean = s.module;
-        let styleModule = styles.find(s => s.module);
-
-        if (!styleModule && !template.attrs['css-modules']) {
+        // @note skip if there's no style modules and template is not marked for processing
+        if (!styleModule && !template.attrs["css-modules"]) {
           return;
         }
 
-        let localNameGenerator = (name: string) => nameGenerator(name, id, styleModule?.content ?? '');
+        const localNameGenerator = (name: string) =>
+          nameGenerator(name, id, styleModule?.content ?? "");
 
-        let transformedSfc = code;
-
-        let templateOffsetChange = 0;
+        const sfcTransform = new MagicString(code);
 
         if (template) {
-          // undefined means html as well
+          // @note undefined means html as well
           template.lang ??= "html";
-
-          let transformedTemplate: string;
 
           switch (template.lang) {
             case "pug":
               {
-                transformedTemplate = transformPug(
+                transformPug(
                   template.content,
+                  template.loc.start.offset,
+                  sfcTransform,
                   {
                     preservePrefix,
                     localNameGenerator,
-                    module: scriptTransform ? false : "$style",
-                  },
-                  pugLocals
+                    module: scriptTransform ? false : styleModuleName,
+                  }
                 );
               }
               break;
+
             case "html":
               {
-                transformedTemplate = transformHtml(template.content, {
-                  preservePrefix,
-                  localNameGenerator,
-                  module: scriptTransform ? false : "$style",
-                });
+                transformHtml(
+                  template.content,
+                  template.loc.start.offset,
+                  sfcTransform,
+                  {
+                    preservePrefix,
+                    localNameGenerator,
+                    module: scriptTransform ? false : styleModuleName,
+                  }
+                );
               }
               break;
+
             default:
               console.warn(
                 `[CSS Modules] Unsupported template language "${template.lang}"! Skipped`
@@ -144,91 +134,38 @@ function plugin({
 
               return;
           }
-
-          //#region correct template lines count to fix source maps (fix #2)
-
-          let templateLines = 1 + template.loc.end.line - template.loc.start.line;
-          let transformedTemplateLines = 1 + (transformedTemplate.match(/\r?\n/g)?.length ?? 0);
-
-          // @todo @bug in node.js this doesn't work and count all \r and \n separately for some reason?
-          // .match(/^/gm).length; so instead match \r\n
-
-          let templateLinesDifference = templateLines - transformedTemplateLines;
-
-          if (templateLinesDifference > 0)
-            transformedTemplate += "\n".repeat(templateLinesDifference);
-          else console.warn(`[CSS Modules] Resulting <template> is longer than source!`);
-
-          //#endregion
-
-          templateOffsetChange = transformedTemplate.length - template.content.length;
-
-          // @note use slice as it's faster than replace
-          transformedSfc =
-            transformedSfc
-              .slice(0, template.loc.start.offset) //
-              .replace(`lang="${template.lang}"`, (sub: string) => {
-                templateOffsetChange -= sub.length;
-                return "";
-              }) +
-            transformedTemplate +
-            transformedSfc.slice(template.loc.end.offset);
         }
 
         if (scriptTransform) {
-          let scriptSetupOffsetChange = 0;
-
           if (scriptSetup) {
-            let transformedScriptSetup = transformScript(scriptSetup.content, localNameGenerator);
-
-            scriptSetupOffsetChange = transformedScriptSetup.length - scriptSetup.content.length;
-
-            let offset = template
-              ? scriptSetup.loc.start.offset < template.loc.start.offset
-                ? // if script setup before template
-                  0
-                : //after template
-                  templateOffsetChange
-              : 0;
-
-            transformedSfc =
-              transformedSfc.slice(0, scriptSetup.loc.start.offset + offset) +
-              transformedScriptSetup +
-              transformedSfc.slice(scriptSetup.loc.end.offset + offset);
+            transformScript(
+              scriptSetup.content,
+              scriptSetup.loc.start.offset,
+              sfcTransform,
+              localNameGenerator
+            );
           }
 
           if (script) {
-            let transformedScript = transformScript(script.content, localNameGenerator);
-
-            let offset = 0;
-
-            // add offset caused by template transform
-            offset += template
-              ? script.loc.start.offset < template.loc.start.offset
-                ? 0
-                : templateOffsetChange
-              : 0;
-
-            // add offset caused by script setup transform
-            if (scriptSetup) {
-              offset +=
-                script.loc.start.offset < scriptSetup.loc.start.offset
-                  ? 0
-                  : scriptSetupOffsetChange;
-            }
-
-            transformedSfc =
-              transformedSfc.slice(0, script.loc.start.offset + offset) +
-              transformedScript +
-              transformedSfc.slice(script.loc.end.offset + offset);
+            transformScript(
+              script.content,
+              script.loc.start.offset,
+              sfcTransform,
+              localNameGenerator
+            );
           }
         }
 
-        return transformedSfc;
+        return {
+          code: sfcTransform.toString(),
+          map: sfcTransform.generateMap({
+            hires: "boundary",
+            includeContent: true,
+          }),
+        };
       }
     },
-  };
-  // @todo satisfies Plugin;
+  } satisfies Plugin;
 }
 
 export {

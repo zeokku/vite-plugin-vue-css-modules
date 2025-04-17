@@ -1,51 +1,51 @@
 import * as babelParser from "@babel/parser";
-
-import babelTraverse from "@babel/traverse";
-import type { NodePath } from "@babel/traverse";
-
-import babelGenerator from "@babel/generator";
-
+import babelTraverse, { type NodePath } from "@babel/traverse";
 import * as babelTypes from "@babel/types";
-import type { Expression } from "@babel/types";
+
+import type { MagicString } from "@vue/compiler-sfc";
 
 import type { TLocalTransformOptions } from "./";
+import { parseQuotedValue } from "./shared.js";
+
+type TQuote = "'" | '"' | "" | "`" | undefined;
+
+/**
+ * Select non-conflicting quote character to the attribute value wrapping quotes
+ */
+const quoteRotation = (attributeQuote: TQuote) => {
+  // @note use single quote if attribute wrapping uses double quotes otherwise use double quotes (in case of backtick quotes or no quotes)
+  return attributeQuote === '"' ? "'" : '"';
+};
 
 const generateModuleAccess = (
-  path: NodePath<Expression>,
-  module: string | false
+  path: NodePath<babelTypes.Identifier>,
+  module: string | false,
+  contentOffset: number,
+  sfcTransform: MagicString
 ) => {
   if (module) {
-    path.replaceWith(
-      //
-      babelTypes.memberExpression(
-        //
-        babelTypes.identifier(module),
-        path.node,
-        true
-      )
-    );
+    const { node } = path;
+    const { range } = node;
+    const startOffset = contentOffset + range[0] - 1;
+    const endOffset = contentOffset + range[1] - 1;
+
+    sfcTransform.update(startOffset, endOffset, `${module}[${node.name}]`);
   }
 };
 
 export const transformJsValue = (
-  exp: string,
+  source: string,
+  contentOffset: number,
+  sfcTransform: MagicString,
+  attributeQuote: TQuote,
   { preservePrefix, localNameGenerator, module }: TLocalTransformOptions
 ) => {
-  // @note wrap in (...)
-  // rip `parseExpression`, the time difference is negligible i'm sure
-  // to sacrifice better code readability
-  let ast = babelParser.parse(`(${exp})`, {
-    ranges: false, // this doesn't seem to work lol, as it still adds ranges?
+  // @note wrap in (...) to serve as root element during traversal, because traverse accepts parent node which won't be processed
+  let ast = babelParser.parse(`(${source})`, {
+    ranges: true,
     plugins: ["typescript"],
   });
 
-  // process root node
-  // visitor[ast.type]?.({ node: ast });
-
-  // @note wrap ast into expression statement to serve as root element during traversal
-  // ast = babelTypes.expressionStatement(ast) as any;
-
-  // @note TRAVERSE ACCEPTS PARENT NODE! SO IT WON'T PROCESS THE ROOT NODE!!!
   babelTraverse(ast, {
     noScope: true,
 
@@ -53,13 +53,15 @@ export const transformJsValue = (
       let { parentPath, node } = path;
 
       if (
-        // !parentPath || // undefined when using parseExpression. the exp is an identifier
         parentPath.isExpressionStatement() || // identifier
+        // @note [class0, class1]
         parentPath.isArrayExpression() ||
+        // @note q ? class : b
         parentPath.isConditionalExpression({ consequent: node }) ||
+        // @note q ? a : class
         parentPath.isConditionalExpression({ alternate: node })
       ) {
-        generateModuleAccess(path, module);
+        generateModuleAccess(path, module, contentOffset, sfcTransform);
 
         path.skip();
       }
@@ -68,17 +70,40 @@ export const transformJsValue = (
         // @note don't use parentPath.get('computed')
         // TypeError: Property key of ObjectProperty expected node to be of a type ["Identifier","StringLiteral","NumericLiteral","BigIntLiteral","DecimalLiteral","PrivateName"] but instead got "MemberExpression"
 
+        // @note { [identifier]: value }
         if (parentPath.node.computed) {
-          generateModuleAccess(path, module);
+          generateModuleAccess(path, module, contentOffset, sfcTransform);
+
+          // @note { a: 0 }
+          // { 'b': 1 } will be processed in StringLiteral
         } else {
-          if (node.name.startsWith(preservePrefix))
-            path.replaceWith(
-              babelTypes.stringLiteral(node.name.slice(preservePrefix.length))
+          const { range } = node;
+          const startOffset = contentOffset + range[0] - 1;
+          const endOffset = contentOffset + range[1] - 1;
+
+          // @note CAN HAPPEN! e.g. `{ $escaped: toggle }` prefixes can be symbols which are allowed in unquoted properties (identifiers)
+          if (node.name.startsWith(preservePrefix)) {
+            sfcTransform.update(
+              startOffset,
+              endOffset,
+              node.name.slice(preservePrefix.length)
             );
-          else
-            path.replaceWith(
-              babelTypes.stringLiteral(localNameGenerator(node.name))
+          } else {
+            const transformedClass = localNameGenerator(node.name);
+
+            const selectedQuote = quoteRotation(attributeQuote);
+            const quotedTransformedClass =
+              selectedQuote + transformedClass + selectedQuote;
+
+            sfcTransform.update(
+              startOffset,
+              endOffset,
+              // @note { class } -> { "transformedClass": class }
+              parentPath.node.shorthand
+                ? `${quotedTransformedClass}: ${node.name}`
+                : quotedTransformedClass
             );
+          }
         }
 
         // skip processing modified node
@@ -95,27 +120,42 @@ export const transformJsValue = (
       )
         return;
 
-      if (node.value.startsWith(preservePrefix)) {
-        node.value = node.value.slice(preservePrefix.length);
+      const { value } = parseQuotedValue(node.extra!.raw as string);
+
+      // prettier-ignore
+      const startOffset = contentOffset + node.range[0]
+      // @note skip (
+      - 1
+      // @note offset quote  
+      + 1;
+
+      const endOffset = contentOffset + node.range[1] - 1 - 1;
+
+      if (value.startsWith(preservePrefix)) {
+        sfcTransform.update(
+          startOffset,
+          endOffset,
+          value.slice(preservePrefix.length)
+        );
       } else {
-        node.value = localNameGenerator(node.value);
+        sfcTransform.update(startOffset, endOffset, localNameGenerator(value));
       }
     },
 
+    // @note `aaaa${0}`, aaaa is template element
     TemplateElement(path) {
       let { node } = path;
 
-      path.replaceWith(
-        babelTypes.templateElement({
-          raw: localNameGenerator(node.value.cooked),
-        })
+      const startOffset = contentOffset + node.range[0] - 1;
+      const endOffset = contentOffset + node.range[1] - 1;
+
+      sfcTransform.update(
+        startOffset,
+        endOffset,
+        localNameGenerator(node.value.raw)
       );
 
       path.skip();
     },
   });
-
-  // @note babel changes ' quotes to " and wraps objects in ()
-  // @note keep minified for deterministic code generation without relying in pretty rules
-  return babelGenerator(ast, { minified: true }).code.replace(/;$/, ""); // @note remove ; at the end
 };

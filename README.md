@@ -1,12 +1,10 @@
-[![npm](https://img.shields.io/npm/v/vite-plugin-vue-css-modules?color=pink&style=flat-square)](https://www.npmjs.com/package/vite-plugin-vue-css-modules)
-[![npm](https://img.shields.io/npm/dw/vite-plugin-vue-css-modules?color=pink&style=flat-square)](https://www.npmjs.com/package/vite-plugin-vue-css-modules)
-[![Discord](https://img.shields.io/discord/405510915845390347?color=pink&label=join%20discord&style=flat-square)](https://zeokku.com/discord)
+[![npm](https://img.shields.io/npm/v/vite-plugin-vue-css-modules?color=salmon&labelColor=black&style=flat&label=Version)](https://www.npmjs.com/package/vite-plugin-vue-css-modules)
+[![npm](https://img.shields.io/npm/dw/vite-plugin-vue-css-modules?color=salmon&labelColor=black&style=flat&label=Downloads)](https://www.npmjs.com/package/vite-plugin-vue-css-modules)
+[![Discord](https://img.shields.io/discord/405510915845390347?color=salmon&labelColor=black&label=Join%20discord&style=flat)](https://zeokku.com/discord)
 
 # ✨ vite-plugin-vue-css-modules
 
-⚡ **Ultimate solution** for using **CSS modules** without any hassle. Automatic replacement for Vue templates and scripts. You don't have to use `$style` object, just write the code as usual.
-
-⚡ The plugin statically processes and replaces names, so there's also **no** scripting overhead due to accessing the `$style` object.
+⚡ **Ultimate solution** for using **CSS modules** without any hassle. Automatic static replacement for classnames and IDs in Vue templates and scripts. You don't have to use `$style` object, just write the code as usual.
 
 ## Installation
 
@@ -23,32 +21,26 @@ npm i -D vite-plugin-vue-css-modules
 In `vite.config.ts`:
 
 ```javascript
-import { cssm, removeCssModulesChunk } from "vite-plugin-vue-css-modules";
+import { cssm } from "vite-plugin-vue-css-modules";
 
 export default defineConfig({
   plugins: [
     //...,
-    cssm({
-      scriptTransform: true,
-    }),
-    // optionally
-    removeCssModulesChunk(),
+    cssm(),
     //...
   ],
   //...
 });
 ```
 
-If you used `<style scoped>` before, the plugin should work out of the box without any additional settings, just replace `scoped` by `module`.
+If you used `<style scoped>` before, the plugin should work out of the box without any additional settings, just replace `scoped` by `module`. If you used `:deep()`, consider using classname cross-referencing instead.
 
 ## Options
 
 The plugin accepts an object `{}` with options:
 
 - `preservePrefix` - an arbitrary string to be used as a prefix for names so they would not be processed and instead would be preserved as-is without the prefix. Useful for styles unaffected by CSS modules or custom #id values **(default: `"--"`)**
-- `scopeBehaviour` - corresponds to `CSSModulesOptions["scopeBehaviour"]` **(default: `"local"`)**
-- `scriptTransform` - if it's `false` - the plugin **will** wrap variables inside of `<template>` in CSS module context variable like so `$style[var]`. If it's `true` then the plugin will transform `$cssModule` macros in `<script>` and `<script setup>` blocks and **will not** wrap anything in `<template>` (see more below) **(default: `false`)**
-- `pugLocals` - an object containing variables for Pug templates **(default: `{}`)**
+- `scriptTransform` - if it's `false` - the plugin **will** wrap variables inside of `<template>` in CSS module context variable like so `$style[var]`. If it's `true` **(default)** then the plugin will transform `$cssModule` macros in `<script>` and `<script setup>` blocks and **will not** wrap anything in `<template>` (see more below)
 - `nameGenerator` - a function of type `CSSModulesOptions["generateScopedName"]` accepting `(name, filename, css)` arguments. This function will be called for each name in each file and it should return a result which will be used for generating a stylesheet. It is possible that the function may be called multiple times with the same pair of name and filename, so it must maintain its own state to return the same name in such case.
 
   The plugin provides two generators as **default** value. If `process.env.NODE_ENV === "production"` then the generator will minify resulting names, otherwise during development the generator returns `Component_Path__classname` type of string.
@@ -59,7 +51,7 @@ You can optionally use `removeCssModulesChunk()` plugin after `vue()` to strip o
 
 If you need to access CSS modules in Javascript, you have two options:
 
-1. **_RECOMMENDED!_** Use `$cssModule` macro to access CSS modules (and set `scriptTransform` to `true`).
+1. **_RECOMMENDED!_** Use `$cssModule` macro to access CSS modules.
 
    If you're using Typescript, place the following code in your `env.d.ts` (or any other file) to get basic types support
 
@@ -258,8 +250,7 @@ Result with `scriptTransform` enabled:
       'TEST__c',
       'TEST__d',
       nop,
-    ]"
-  >
+    ]">
     Yop
   </div>
   <span
@@ -268,9 +259,11 @@ Result with `scriptTransform` enabled:
       TEST__static: toggle1,
       'TEST__string-const': toggle2,
       'TEST__another-one': toggle3,
-    }"
-  ></span>
-  <div :class="v0 ? 'TEST__class8' : v1 ? 'TEST__class9' : v2 ? class10 : 'TEST__class11'">
+    }"></span>
+  <div
+    :class="
+      v0 ? 'TEST__class8' : v1 ? 'TEST__class9' : v2 ? class10 : 'TEST__class11'
+    ">
     <div :class="v0 ? varClass0 : varClass1">Now this is processed</div>
   </div>
   <div class="escaped0"></div>
@@ -340,8 +333,7 @@ Result with `scriptTransform` disabled. Notice that variables are wrapped in `$s
       'TEST__c',
       'TEST__d',
       $style[nop],
-    ]"
-  >
+    ]">
     Yop
   </div>
   <span
@@ -350,10 +342,20 @@ Result with `scriptTransform` disabled. Notice that variables are wrapped in `$s
       TEST__static: toggle1,
       'TEST__string-const': toggle2,
       'TEST__another-one': toggle3,
-    }"
-  ></span>
-  <div :class="v0 ? 'TEST__class8' : v1 ? 'TEST__class9' : v2 ? $style[class10] : 'TEST__class11'">
-    <div :class="v0 ? $style[varClass0] : $style[varClass1]">Now this is processed</div>
+    }"></span>
+  <div
+    :class="
+      v0
+        ? 'TEST__class8'
+        : v1
+        ? 'TEST__class9'
+        : v2
+        ? $style[class10]
+        : 'TEST__class11'
+    ">
+    <div :class="v0 ? $style[varClass0] : $style[varClass1]">
+      Now this is processed
+    </div>
   </div>
   <div class="escaped0"></div>
   <div id="escaped1"></div>

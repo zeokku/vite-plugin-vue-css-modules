@@ -1,30 +1,47 @@
 import type { TLocalTransformOptions } from "../src";
 
 /**
- * wrap in quotes (string literal)
+ * Wrap in quotes (string literal)
  * @param s string value
- * @param c quote char (default: `"`)
+ * @param qc quote char
  * @returns
  */
-export const q = (s: string, c = '"') => c + s + c;
+const q = (s: string, qc: string) => qc + s + qc;
+
+export const sq = (s: string) => q(s, "'");
+export const dq = (s: string) => q(s, '"');
+export const bq = (s: string) => q(s, "`");
 
 /**
- * mock name generator
+ * Mock name generator
  * @param n name
  * @returns
  */
 export const ng = n => "TEST__" + n;
 
 /**
- * name generator that returns name in quotes
+ * Name generator that returns name in quotes
  * @param n name
- * @param c quote char (default: `"`)
+ * @param qc quote char
  * @returns
  */
-export const qng = (n: string, c = '"') => q(ng(n), c);
+const qng = (n: string, qc: string) => q(ng(n), qc);
 
 /**
- * generate options object
+ * Single quote {@linkcode qng | qng()}
+ */
+export const sqng = (n: string) => qng(n, "'");
+/**
+ * Double quote {@linkcode qng | qng()}
+ */
+export const dqng = (n: string) => qng(n, '"');
+/**
+ * Backtick quote {@linkcode qng | qng()}
+ */
+export const bqng = (n: string) => qng(n, "`");
+
+/**
+ * Generate options object
  * @param preservePrefix
  * @returns
  */

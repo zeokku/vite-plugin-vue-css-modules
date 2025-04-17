@@ -1,8 +1,9 @@
 import { assert, describe, expect, test } from "vitest";
-import { o, q, qng, nows, md } from "./utils";
+import { o, md, sq, sqng, dqng, bqng } from "./utils";
 
 import type { TLocalTransformOptions } from "../src";
 import { transformJsValue } from "../src/transformJsValue";
+import { MagicString } from "@vue/compiler-sfc";
 
 const testValue = (
   value: string,
@@ -10,7 +11,11 @@ const testValue = (
   cb: (result: string) => void
 ) =>
   test(value, () => {
-    cb(transformJsValue(value, options));
+    const sfcTransform = new MagicString(value);
+
+    transformJsValue(value, 0, sfcTransform, '"', options);
+
+    cb(sfcTransform.toString());
   });
 
 (["$style", false] as const).forEach(module => {
@@ -25,28 +30,29 @@ const testValue = (
     });
 
     testValue(`'class'`, opt, r => {
-      assert.equal(r, qng("class"));
+      assert.equal(r, sqng("class"));
     });
 
     testValue(`"class"`, opt, r => {
-      assert.equal(r, qng("class"));
+      assert.equal(r, dqng("class"));
     });
 
     testValue(`'--escaped'`, opt, r => {
-      assert.equal(r, q("escaped"));
+      assert.equal(r, sq("escaped"));
     });
 
     testValue("f ? 'x' : `y`", opt, r => {
-      assert.equal(r, nows`f ? ${qng("x")} : ${qng("y", "`")}`);
+      assert.equal(r, `f ? ${sqng("x")} : ${bqng("y")}`);
     });
 
     testValue(
       `v0 ? 'class0' : v1 ? "class1" : v2 ? class2 : \`class3\``,
       opt,
       r => {
+        // @note double quoted string should be singlequoted
         // prettier-ignore
         assert.equal(r, 
-        nows`v0 ? ${qng('class0')} : v1 ? ${qng('class1')} : v2 ? ${md('class2', module)} : ${qng('class3', '`')}`
+        `v0 ? ${sqng('class0')} : v1 ? ${dqng('class1')} : v2 ? ${md('class2', module)} : ${bqng('class3')}`
       )
       }
     );
@@ -54,7 +60,7 @@ const testValue = (
     testValue("v0 ? varClass0 : varClass1", opt, r => {
       // prettier-ignore
       assert.equal(r, 
-        nows`v0 ? ${md('varClass0', module)} : ${md('varClass1', module)}`
+        `v0 ? ${md('varClass0', module)} : ${md('varClass1', module)}`
       )
     });
 
@@ -62,7 +68,7 @@ const testValue = (
       // prettier-ignore
       assert.equal(r,
         // @note no idea why babel changes quotes
-        nows`variable === "" || ${qng("class")}`
+        `variable === '' || ${sqng("class")}`
       );
     });
 
@@ -70,11 +76,10 @@ const testValue = (
       "s1.normalize('NFKD') === s2.normalize('NFKD') && 'classname'",
       opt,
       r => {
+        // prettier-ignore
         assert.equal(
           r,
-          nows`s1.normalize("NFKD") === s2.normalize("NFKD") && ${qng(
-            "classname"
-          )}`
+          `s1.normalize('NFKD') === s2.normalize('NFKD') && ${sqng("classname")}`
         );
       }
     );
@@ -86,7 +91,7 @@ const testValue = (
         // prettier-ignore
         assert.equal(
           r,
-          nows`s1?.normalize("NFKD") === s2.normalize("NFKD") && ${qng("classname")}`
+          `s1?.normalize('NFKD') === s2.normalize('NFKD') && ${sqng("classname")}`
         );
       }
     );
@@ -94,14 +99,14 @@ const testValue = (
     testValue("[{ a: f0 }, { c }, 'd', `e`, varClass]", opt, r => {
       // prettier-ignore
       assert.equal(r, 
-        nows`[{ ${qng('a')}: f0 }, { ${qng('c')}: c }, ${qng('d')}, ${qng('e', '`')}, ${md('varClass', module)}]` 
+        `[{ ${sqng('a')}: f0 }, { ${sqng('c')}: c }, ${sqng('d')}, ${bqng('e')}, ${md('varClass', module)}]` 
       );
     });
 
     testValue("flag ? ['--escaped', 'class0'] : []", opt, r => {
       // prettier-ignore
       assert.equal(r, 
-        nows`flag ? ["escaped", ${qng('class0')}] : []`
+        `flag ? ['escaped', ${sqng('class0')}] : []`
       );
     });
 
@@ -113,26 +118,24 @@ const testValue = (
         assert.equal(r, 
         // @note ()
         // prettier-ignore
-nows`({
-  [${md('computed', module)}]: toggle0,
-  ${qng('static')}: toggle1,
-  ${qng('string-const')}: toggle2
-})` 
+`{ [${md('computed', module)}]: toggle0, ${sqng('static')}: toggle1, ${sqng('string-const')}: toggle2 }` 
       )
       }
     );
 
     testValue(`{ '--escaped': toggle0 }`, opt, r => {
-      assert.equal(r, nows`({ "escaped": toggle0 })`);
+      assert.equal(r, `{ 'escaped': toggle0 }`);
     });
 
-    opt = {
-      ...o("$"),
-      module,
-    };
-
-    testValue(`{ $escaped: toggle0 }`, opt, r => {
-      assert.equal(r, nows`({ "escaped": toggle0 })`);
-    });
+    testValue(
+      `{ $escaped: toggle0 }`,
+      {
+        ...o("$"),
+        module,
+      },
+      r => {
+        assert.equal(r, `{ escaped: toggle0 }`);
+      }
+    );
   });
 });

@@ -1,4 +1,8 @@
 <template lang="pug">
+div(:class="a", :id="b", data-theme="dark" data-o="o")
+
+div(class="aaa --nnn bbb")
+
 .class0.class2(:class="varClass")
     #id0.class3 test
 
@@ -30,7 +34,7 @@ div(:--id="someRawVar2")
 <script lang="ts">
 export const aaaa = "test";
 
-console.log('script');
+console.log("script");
 </script>
 
 <script lang="ts" setup>
@@ -40,26 +44,25 @@ const props = defineProps<{ title: string }>();
 
 let varClass = $cssModule.test;
 
-let varClass0 = $cssModule['test-class']
+let varClass0 = $cssModule["test-class"];
 
-let varClass1 = $cssModule["test-class2"]
+let varClass1 = $cssModule["test-class2"];
 
-let varClass2 = $cssModule[`test-class3`]
+let varClass2 = $cssModule[`test-class3`];
 
-
-alert('test!')
+alert("test!");
 </script>
 
 <style lang="less" module>
 .class0 {
-    display: flex;
+  display: flex;
 }
 
 .class2 {
-    display: grid;
+  display: grid;
 }
 
 .class1 {
-    display: ruby;
+  display: ruby;
 }
 </style>

@@ -1,12 +1,12 @@
-import MagicString from "magic-string";
-
-import { transformJsValue } from "./transformJsValue.js";
+import { MagicString } from "@vue/compiler-sfc";
+import type { Loc } from "pug-lexer";
 
 import { createRequire } from "module";
-import { TLocalTransformOptions } from "./index.js";
 const require = createRequire(import.meta.url);
 
-import type { Loc } from "pug-lexer";
+import { transformJsValue } from "./transformJsValue.js";
+import { TLocalTransformOptions } from "./index.js";
+import { parseQuotedValue } from "./shared.js";
 
 type TPugLexer = typeof import("pug-lexer");
 
@@ -18,17 +18,12 @@ const resolveLex = () => {
   }
 };
 
-// values may be wrapped in quotes
-const parseQuotedValue = (val: string) =>
-  // prettier-ignore
-  val.match(/(?<quote>['"`]?)(?<value>[^]*)\1/)!
-    .groups as { 
-        quote: "" | "`" | '"' | "'"
-        value: string
-    };
-
-const getOffset = (lines: string[], pos: Loc["start"]) => {
-  let offset = 0;
+/**
+ * Get offset in global SFC space
+ * @param localOffset Current block offset inside of SFC
+ */
+const getOffset = (lines: string[], pos: Loc["start"], localOffset: number) => {
+  let offset = localOffset;
 
   for (let l = 1; l < pos.line; l += 1) {
     offset += lines[l - 1].length;
@@ -39,17 +34,25 @@ const getOffset = (lines: string[], pos: Loc["start"]) => {
   return offset;
 };
 
-const getRange = (lines: string[], loc: Loc) => {
-  return [getOffset(lines, loc.start), getOffset(lines, loc.end)] as const;
+/**
+ * Get range in global SFC space
+ * @param localOffset Current block offset inside of SFC
+ */
+const getRange = (lines: string[], loc: Loc, localOffset: number) => {
+  return [
+    getOffset(lines, loc.start, localOffset),
+    getOffset(lines, loc.end, localOffset),
+  ] as [startOffset: number, endOffset: number];
 };
 
 export const transformPug = (
   source: string,
+  contentOffset: number,
+  sfcTransform: MagicString,
   { preservePrefix, localNameGenerator, module }: TLocalTransformOptions
 ) => {
   resolveLex();
 
-  let sourceTransform = new MagicString(source);
   // @note include new line chars so we get proper offset
   let lines = source.split(/(?<=\r?\n)/g);
 
@@ -68,43 +71,51 @@ export const transformPug = (
           // @note lexer includes . or # into range, yet ignores in value we only need to replace the name itself, so we skip . or #
           t.loc.start.column += 1;
 
-          let range = getRange(lines, t.loc);
+          let range = getRange(lines, t.loc, contentOffset);
 
           if (value.startsWith(preservePrefix)) {
             // remove prefix
-            sourceTransform.update(
-              ...range,
-              value.slice(preservePrefix.length)
-            );
+            sfcTransform.update(...range, value.slice(preservePrefix.length));
           } else {
-            sourceTransform.update(...range, localNameGenerator(value));
+            sfcTransform.update(...range, localNameGenerator(value));
           }
         }
         break;
       case "attribute":
         {
+          // @note skip attrs without value
+          if (!t.val) return;
+
           switch (t.name) {
-            // div(class="a" id="b")
+            // div(class="a b" id="c")
             case "class":
             case "id":
               {
-                // @note skip attrs without value
-                if (!t.val) return;
-
-                let range = getRange(lines, t.loc);
+                let range = getRange(lines, t.loc, contentOffset);
 
                 let { quote, value } = parseQuotedValue(t.val as string);
 
-                if (value.startsWith(preservePrefix)) {
-                  value = value.slice(preservePrefix.length);
-                } else {
-                  value = localNameGenerator(value);
-                }
+                const startOffset = range[1] - quote.length - value.length;
 
-                sourceTransform.update(
-                  ...range,
-                  `${t.name}=${quote}${value}${quote}`
-                );
+                const rgx = /\S+/g;
+
+                let matchResult = rgx.exec(value);
+
+                while (matchResult) {
+                  const [match] = matchResult;
+
+                  let name = match.startsWith(preservePrefix)
+                    ? match.slice(preservePrefix.length)
+                    : localNameGenerator(match);
+
+                  sfcTransform.update(
+                    startOffset + matchResult.index,
+                    startOffset + matchResult.index + match.length,
+                    name
+                  );
+
+                  matchResult = rgx.exec(value);
+                }
               }
               break;
 
@@ -113,21 +124,27 @@ export const transformPug = (
             case "v-bind:class":
             case "v-bind:id":
               {
-                // @note skip attrs without value
-                if (!t.val) return;
+                let [startOffset, endOffset] = getRange(
+                  lines,
+                  t.loc,
+                  contentOffset
+                );
 
-                let range = getRange(lines, t.loc);
+                // @note :class={quote}{value}{quote}
+                // @note damn pug normalizes \r\n into \n leading to offset issues
+                let { value, quote } = parseQuotedValue(t.val as string);
 
-                let { value } = parseQuotedValue(t.val as string);
-
-                value = transformJsValue(value, {
-                  preservePrefix,
-                  localNameGenerator,
-                  module,
-                });
-
-                // @note value can only have ` or " quotes after babel transform
-                sourceTransform.update(...range, `${t.name}='${value}'`);
+                transformJsValue(
+                  value,
+                  endOffset - quote.length - value.length,
+                  sfcTransform,
+                  quote,
+                  {
+                    preservePrefix,
+                    localNameGenerator,
+                    module,
+                  }
+                );
               }
               break;
 
@@ -140,14 +157,14 @@ export const transformPug = (
                 loc.end.line = loc.start.line;
                 loc.end.column = loc.start.column + t.name.length;
 
-                let range = getRange(lines, loc);
+                let range = getRange(lines, loc, contentOffset);
 
                 let name = t.name.replace(
                   new RegExp(`(?<=^:?)${preservePrefix}`),
                   ""
                 );
 
-                sourceTransform.update(...range, name);
+                sfcTransform.update(...range, name);
               }
               break;
           }
@@ -155,9 +172,4 @@ export const transformPug = (
         break;
     }
   });
-
-  return {
-    code: sourceTransform.toString(),
-    map: sourceTransform.generateMap(),
-  };
 };

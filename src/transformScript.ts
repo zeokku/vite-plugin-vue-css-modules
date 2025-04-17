@@ -1,19 +1,30 @@
+import type { MagicString } from "@vue/compiler-sfc";
 import type { TLocalTransformOptions } from "./";
 
 import { hyphenate } from "@vue/shared";
 
 export const transformScript = (
-  code: string,
+  source: string,
+  contentOffset: number,
+  sfcTransform: MagicString,
   localNameGenerator: TLocalTransformOptions["localNameGenerator"]
 ) => {
-  return code.replace(
-    /\$cssModule(?:\[['"`]([\w\-]+)['"`]\]|\.(\w+))/g,
-    (_, classNameComputed: string, classNameProp: string) => {
-      // convert property notation in camel case to hyphens
-      let name = classNameProp ? hyphenate(classNameProp) : classNameComputed;
+  const rgx = /\$cssModule(?:\[['"`]([\w\-]+)['"`]\]|\.(\w+))/g;
 
-      // wrap in quotes
-      return JSON.stringify(localNameGenerator(name));
-    }
-  );
+  let matchResult = rgx.exec(source);
+
+  while (matchResult) {
+    const [match, classNameComputed, classNameProp] = matchResult;
+    const sfcOffsetStart = contentOffset + matchResult.index;
+
+    // @note convert property notation in camel case to hyphens
+    let name = classNameProp ? hyphenate(classNameProp) : classNameComputed;
+
+    // @note wrap in quotes
+    name = JSON.stringify(localNameGenerator(name));
+
+    sfcTransform.update(sfcOffsetStart, sfcOffsetStart + match.length, name);
+
+    matchResult = rgx.exec(source);
+  }
 };
