@@ -1,11 +1,11 @@
 import { assert, describe, expect, test } from "vitest";
-import { ng, o, qng } from "./utils";
+import { md, ng, o, qng } from "./utils";
 
 import type { TLocalTransformOptions } from "../src";
-import { transformPug } from "../src/transformPug";
+import { transformPug } from "../src/transformPug2";
 
 (["$style", false] as const).forEach(module =>
-  describe("pug", () => {
+  describe(`pug (module: ${module})`, () => {
     let opt: TLocalTransformOptions = {
       ...o(),
       module,
@@ -14,15 +14,15 @@ import { transformPug } from "../src/transformPug";
     test("static class attribute", () => {
       let h = `.class0.class1`;
       let r = transformPug(h, opt);
-      assert.equal(r, `<div class="${ng("class0")} ${ng("class1")}"></div>`);
+      assert.equal(r.code, `.${ng("class0")}.${ng("class1")}`);
     });
 
     test("static and variable class attributes", () => {
       let h = `.class0.class1(:class="varClass")`;
       let r = transformPug(h, opt);
       // prettier-ignore
-      assert.equal(r,
-        `<div class="${ng("class0")} ${ng("class1")}" :class="${module ? `${module}[varClass]` : 'varClass'}"></div>`      
+      assert.equal(r.code,
+        `.${ng("class0")}.${ng("class1")}(:class='${md('varClass', module)}')`      
       );
     });
 
@@ -32,7 +32,7 @@ import { transformPug } from "../src/transformPug";
       let r = transformPug(h, opt);
 
       //prettier-ignore
-      assert.equal(r, `<div :id="${module ? `${module}[varId]` : 'varId'}"></div>`)
+      assert.equal(r.code, `div(:id='${md('varId', module)}')`)
     });
 
     test("mixed class and id attributes", () => {
@@ -41,7 +41,7 @@ import { transformPug } from "../src/transformPug";
       let r = transformPug(h, opt);
 
       // prettier-ignore
-      assert.equal(r, `<div class="${ng('class0')}" id="${ng('id0')}" :class="${module ? `${module}[varClass0]` : 'varClass0'}"></div>`);
+      assert.equal(r.code, `.${ng('class0')}#${ng('id0')}(:class='${md('varClass0', module)}')`);
     });
 
     test("nested elements", () => {
@@ -54,10 +54,10 @@ import { transformPug } from "../src/transformPug";
       let r = transformPug(h, opt);
 
       // prettier-ignore
-      assert.equal(r, 
-`<div class="${ng("a")}">` +
-    `<div class="${ng("b")}" :class="${module ? `${module}[varClass]` : 'varClass'}"></div>` +
-`</div>`
+      assert.equal(r.code, 
+`.${ng("a")}
+  .${ng("b")}(:class='${md('varClass', module)}')
+`
     );
     });
 
@@ -66,43 +66,43 @@ import { transformPug } from "../src/transformPug";
       let h = 'div(--class="class0 class1")';
       let r = transformPug(h, opt);
 
-      assert.equal(r, `<div class="class0 class1"></div>`);
+      assert.equal(r.code, `div(class="class0 class1")`);
 
       h = 'div(--id="el")';
       r = transformPug(h, opt);
 
-      assert.equal(r, '<div id="el"></div>');
+      assert.equal(r.code, 'div(id="el")');
     });
 
     test("escape inline attributes", () => {
       let h = ".--class0.--class1";
       let r = transformPug(h, opt);
 
-      assert.equal(r, `<div class="class0 class1"></div>`);
+      assert.equal(r.code, ".class0.class1");
 
       h = "#--id0";
       r = transformPug(h, opt);
 
-      assert.equal(r, `<div id="id0"></div>`);
+      assert.equal(r.code, "#id0");
     });
 
     test("escape inline mixed class", () => {
       let h = ".--escape.class0";
       let r = transformPug(h, opt);
 
-      assert.equal(r, `<div class="escape ${ng("class0")}"></div>`);
+      assert.equal(r.code, `.escape.${ng("class0")}`);
     });
 
     test("escape dynamic attributes", () => {
       let h = 'div(:--class="[class0, class1]")';
       let r = transformPug(h, opt);
 
-      assert.equal(r, `<div :class="[class0, class1]"></div>`);
+      assert.equal(r.code, `div(:class="[class0, class1]")`);
 
       h = 'div(:--id="el")';
       r = transformPug(h, opt);
 
-      assert.equal(r, '<div :id="el"></div>');
+      assert.equal(r.code, 'div(:id="el")');
     });
   })
 );

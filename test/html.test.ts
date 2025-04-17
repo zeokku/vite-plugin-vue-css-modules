@@ -1,5 +1,5 @@
 import { assert, describe, expect, test } from "vitest";
-import { ng, o, qng } from "./utils";
+import { md, ng, o, qng } from "./utils";
 
 import type { TLocalTransformOptions } from "../src";
 import { transformHtml } from "../src/transformHtml";
@@ -22,7 +22,7 @@ import { transformHtml } from "../src/transformHtml";
       let r = transformHtml(h, opt);
       // prettier-ignore
       assert.equal(r,
-        `<div class="${ng("class0")} ${ng("class1")}" :class="${module ? `${module}[varClass]` : 'varClass'}"></div>`      
+        `<div class="${ng("class0")} ${ng("class1")}" :class="${md('varClass', module)}"></div>`      
       );
     });
 
@@ -32,7 +32,7 @@ import { transformHtml } from "../src/transformHtml";
       let r = transformHtml(h, opt);
 
       //prettier-ignore
-      assert.equal(r, `<div :id="${module ? `${module}[varId]` : 'varId'}"></div>`)
+      assert.equal(r, `<div :id="${md('varId', module)}"></div>`)
     });
 
     test("mixed class and id attributes", () => {
@@ -41,7 +41,7 @@ import { transformHtml } from "../src/transformHtml";
       let r = transformHtml(h, opt);
 
       // prettier-ignore
-      assert.equal(r, `<div id="${ng('id0')}" class="${ng('class0')}" :class="${module ? `${module}[varClass0]` : 'varClass0'}"></div>`);
+      assert.equal(r, `<div id="${ng('id0')}" class="${ng('class0')}" :class="${md('varClass0', module)}"></div>`);
     });
 
     test("nested elements", () => {
@@ -56,7 +56,7 @@ import { transformHtml } from "../src/transformHtml";
       // prettier-ignore
       assert.equal(r, 
 `<div class="${ng("a")}">` +
-    `<div class="${ng("b")}" :class="${module ? `${module}[varClass]` : 'varClass'}"></div>` +
+    `<div class="${ng("b")}" :class="${md('varClass', module)}"></div>` +
 `</div>`
     );
     });

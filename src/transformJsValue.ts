@@ -10,7 +10,10 @@ import type { Expression } from "@babel/types";
 
 import type { TLocalTransformOptions } from "./";
 
-const generateModuleAccess = (path: NodePath<Expression>, module: string | false) => {
+const generateModuleAccess = (
+  path: NodePath<Expression>,
+  module: string | false
+) => {
   if (module) {
     path.replaceWith(
       //
@@ -69,8 +72,13 @@ export const transformJsValue = (
           generateModuleAccess(path, module);
         } else {
           if (node.name.startsWith(preservePrefix))
-            path.replaceWith(babelTypes.stringLiteral(node.name.slice(preservePrefix.length)));
-          else path.replaceWith(babelTypes.stringLiteral(localNameGenerator(node.name)));
+            path.replaceWith(
+              babelTypes.stringLiteral(node.name.slice(preservePrefix.length))
+            );
+          else
+            path.replaceWith(
+              babelTypes.stringLiteral(localNameGenerator(node.name))
+            );
         }
 
         // skip processing modified node
@@ -97,12 +105,17 @@ export const transformJsValue = (
     TemplateElement(path) {
       let { node } = path;
 
-      path.replaceWith(babelTypes.templateElement({ raw: localNameGenerator(node.value.cooked) }));
+      path.replaceWith(
+        babelTypes.templateElement({
+          raw: localNameGenerator(node.value.cooked),
+        })
+      );
 
       path.skip();
     },
   });
 
-  // remove ; at the end
-  return babelGenerator(ast, { minified: true }).code.slice(0, -1);
+  // @note babel changes ' quotes to " and wraps objects in ()
+  // @note keep minified for deterministic code generation without relying in pretty rules
+  return babelGenerator(ast, { minified: true }).code.replace(/;$/, ""); // @note remove ; at the end
 };
