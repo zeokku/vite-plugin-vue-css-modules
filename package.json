@@ -8,7 +8,7 @@
   "type": "module",
   "module": "./dist/index.js",
   "main": "./dist/index.js",
-  "exports":{
+  "exports": {
     ".": "./dist/index.js",
     "./macros": "./macros.d.ts"
   },
@@ -22,7 +22,10 @@
     "dist",
     "macros.d.ts"
   ],
-  "repository": "github:zeokku/vite-plugin-vue-css-modules",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zeokku/vite-plugin-vue-css-modules.git"
+  },
   "keywords": [
     "vite",
     "vite-plugin",
