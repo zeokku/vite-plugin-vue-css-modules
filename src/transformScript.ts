@@ -1,5 +1,5 @@
 import type { MagicString } from "@vue/compiler-sfc";
-import type { TLocalTransformOptions } from "./";
+import type { ILocalTransformOptions } from "./index.js";
 
 import { hyphenate } from "@vue/shared";
 
@@ -7,7 +7,7 @@ export const transformScript = (
   source: string,
   contentOffset: number,
   sfcTransform: MagicString,
-  localNameGenerator: TLocalTransformOptions["localNameGenerator"]
+  localNameGenerator: ILocalTransformOptions["localNameGenerator"]
 ) => {
   const rgx = /\$cssModule(?:\[['"`]([\w\-]+)['"`]\]|\.(\w+))/g;
 

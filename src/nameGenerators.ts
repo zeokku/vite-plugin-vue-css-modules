@@ -1,7 +1,7 @@
 import idGenerator from "./id.js";
 import path from "path";
 
-import type { TPluginOptions } from ".";
+import type { ICssModulesPluginOptions } from "./index.js";
 
 // filename
 // C:/.../src/views/About.vue?vue&type=style&index=0&lang.module.less
@@ -21,49 +21,51 @@ const deriveScope = (filename: string) =>
     .replace(/^views[\\/]/, "V")
     .replace(/[\\/]/g, "_");
 
-const prodNameGeneratorContext = (): TPluginOptions["nameGenerator"] => {
-  let namesMap: Record<string, string> = {};
+const prodNameGeneratorContext =
+  (): ICssModulesPluginOptions["nameGenerator"] => {
+    let namesMap: Record<string, string> = {};
 
-  //move dash to the end to optimize name generation
-  let generateName = idGenerator({
-    alphabet: "_abcdefghijklmnopqrstuvwxyz0123456789-",
-  });
+    //move dash to the end to optimize name generation
+    let generateName = idGenerator({
+      alphabet: "_abcdefghijklmnopqrstuvwxyz0123456789-",
+    });
 
-  //the function is called for each CSS rule, so cache the pairs of minified name with og name
-  return (name, filename) => {
-    let key =
-      name.split("__", 2).length === 2
-        ? name
-        : deriveScope(filename) + "__" + name;
+    //the function is called for each CSS rule, so cache the pairs of minified name with og name
+    return (name, filename) => {
+      let key =
+        name.split("__", 2).length === 2
+          ? name
+          : deriveScope(filename) + "__" + name;
 
-    if (namesMap[key]) return namesMap[key];
+      if (namesMap[key]) return namesMap[key];
 
-    for (;;) {
-      let newName = generateName();
+      for (;;) {
+        let newName = generateName();
 
-      // @note hyphen prefixes are reserved for vendor classes, also it can't start with a digit, in addition exclude ^ad or any _ad, -ad constructions to avoid adblock problem
-      if (!/^[-\d]|(?:[-_]+|^)ad/.test(newName)) {
-        namesMap[key] = newName;
+        // @note hyphen prefixes are reserved for vendor classes, also it can't start with a digit, in addition exclude ^ad or any _ad, -ad constructions to avoid adblock problem
+        if (!/^[-\d]|(?:[-_]+|^)ad/.test(newName)) {
+          namesMap[key] = newName;
 
-        return newName;
+          return newName;
+        }
       }
-    }
+    };
+    // satisfies ICssModulesPluginOptions['nameGenerator'];
   };
-  // satisfies TPluginOptions['nameGenerator'];
-};
 
-const devNameGeneratorContext = (): TPluginOptions["nameGenerator"] => {
-  return (name, filename) => {
-    let provided = name.split("__", 2);
+const devNameGeneratorContext =
+  (): ICssModulesPluginOptions["nameGenerator"] => {
+    return (name, filename) => {
+      let provided = name.split("__", 2);
 
-    if (provided.length === 2) {
-      return name;
-    } else {
-      let scope = deriveScope(filename);
+      if (provided.length === 2) {
+        return name;
+      } else {
+        let scope = deriveScope(filename);
 
-      return scope + "__" + name;
-    }
+        return scope + "__" + name;
+      }
+    };
   };
-};
 
 export { prodNameGeneratorContext, devNameGeneratorContext };

@@ -1,14 +1,16 @@
-[![npm](https://img.shields.io/npm/v/vite-plugin-vue-css-modules?color=salmon&labelColor=black&style=flat&label=Version)](https://www.npmjs.com/package/vite-plugin-vue-css-modules)
+[![npm](https://img.shields.io/npm/v/vite-plugin-vue-css-modules?color=coral&labelColor=black&style=flat&label=Version)](https://www.npmjs.com/package/vite-plugin-vue-css-modules)
 [![npm](https://img.shields.io/npm/dw/vite-plugin-vue-css-modules?color=salmon&labelColor=black&style=flat&label=Downloads)](https://www.npmjs.com/package/vite-plugin-vue-css-modules)
-[![Discord](https://img.shields.io/discord/405510915845390347?color=salmon&labelColor=black&label=Join%20discord&style=flat)](https://zeokku.com/discord)
+[![Discord](https://img.shields.io/discord/405510915845390347?color=5865F2&labelColor=black&label=Join%20discord&style=flat)](https://zeokku.com/discord)
 
 # ✨ vite-plugin-vue-css-modules
 
-⚡ **Ultimate solution** for using **CSS modules** without any hassle. Automatic static replacement for classnames and IDs in Vue templates and scripts. You don't have to use `$style` object, just write the code as usual.
+⚡ **The ultimate solution** for using **CSS modules** with zero friction.
+
+Automatic static replacement of class names and IDs in Vue templates and scripts. Write plain class names: no `$style`, no imports, no special syntax.
 
 ## Installation
 
-```
+```sh
 pnpm add -D vite-plugin-vue-css-modules
 # or
 yarn add -D vite-plugin-vue-css-modules
@@ -20,20 +22,19 @@ npm i -D vite-plugin-vue-css-modules
 
 In `vite.config.ts`:
 
+<!-- prettier-ignore -->
 ```javascript
-import { cssm } from "vite-plugin-vue-css-modules";
+import { cssModules, removeCssModuleExports } from "vite-plugin-vue-css-modules";
 
 export default defineConfig({
   plugins: [
-    //...,
-    cssm(),
-    //...
+    cssModules(), 
+    removeCssModuleExports()
   ],
-  //...
 });
 ```
 
-If you used `<style scoped>` before, the plugin should work out of the box without any additional settings, just replace `scoped` by `module`. If you used `:deep()`, consider using classname cross-referencing instead.
+If you used `<style scoped>` before, the plugin should work out of the box without any additional settings, just replace `scoped` by `module`. If you used `:deep()`, consider using [classname cross-referencing](#cross-component-referencing) instead.
 
 ## Options
 
@@ -123,6 +124,30 @@ Any class name is available from any component by using a scope prefix. Scope pr
    `/src/components/Foo/Bar.vue` will be `CFoo_Bar__class-name`
 1. If the file is in `/src/views/` folder then prefix must be `V[ComponentFileName]`
    `/src/views/About.vue` will be `VAbout__class-name`
+
+## Shared CSS module files
+
+One of the limitations of cross-referencing is that both stylesheets must be already loaded. In architecture with lots of lazy-loaded modules it may become a problem. In this case consider extracting shared styles from SFC into a separate file and then include it in both components:
+
+In `DefinitelyNotInboxEntry.vue`:
+
+```vue
+<template lang="pug">
+.CInboxEntry__entry
+  .CInboxEntry__title ...
+  //- ...
+</template>
+
+<style module lang="scss">
+/*
+... component's own styles
+*/
+</style>
+
+<style module="$style_1" src="@/components/InboxEntry.scss" />
+```
+
+**Keep in mind** that standalone stylesheets generate scoped names the same way as Vue SFC files. Which also means you can have both `InboxEntry.vue` and `InboxEntry.scss` next to each other and write classes without prefixes in that component's template!
 
 ## Edge cases
 

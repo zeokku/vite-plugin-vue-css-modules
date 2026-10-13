@@ -6,7 +6,7 @@ export interface IOptions {
 }
 
 export default function ({ alphabet, lastId = "" }: IOptions) {
-  let digitsArray;
+  let digitsArray: number[];
 
   const maxDigit = alphabet.length - 1;
 
