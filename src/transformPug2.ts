@@ -5,7 +5,7 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
 import { transformJsValue } from "./transformJsValue.js";
-import { TLocalTransformOptions } from "./index.js";
+import { ILocalTransformOptions } from "./index.js";
 import { parseQuotedValue } from "./shared.js";
 
 type TPugLexer = typeof import("pug-lexer");
@@ -49,7 +49,7 @@ export const transformPug = (
   source: string,
   contentOffset: number,
   sfcTransform: MagicString,
-  { preservePrefix, localNameGenerator, module }: TLocalTransformOptions
+  { preservePrefix, localNameGenerator, module }: ILocalTransformOptions
 ) => {
   resolveLex();
 

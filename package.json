@@ -1,13 +1,17 @@
 {
   "name": "vite-plugin-vue-css-modules",
   "description": "✨ Ultimate solution for using CSS modules without any hassle. Automatic replacement for Vue templates and scripts",
-  "version": "4.0.1",
-  "author": "Lutymane <luty@zeokku.com>",
+  "version": "5.0.0",
+  "author": "Lutymane",
   "funding": "https://ko-fi.com/zeokku",
   "license": "MIT",
   "type": "module",
   "module": "./dist/index.js",
   "main": "./dist/index.js",
+  "exports":{
+    ".": "./dist/index.js",
+    "./macros": "./macros.d.ts"
+  },
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
@@ -33,24 +37,25 @@
   ],
   "devDependencies": {
     "@types/babel__generator": "^7.27.0",
-    "@types/babel__traverse": "^7.20.7",
-    "@types/node": "^22.14.1",
+    "@types/babel__traverse": "^7.28.0",
+    "@types/node": "^26.6.5",
     "@types/pug": "^2.0.10",
-    "@vue/compiler-sfc": "^3.5.13",
-    "@vue/shared": "^3.5.13",
+    "@vue/compiler-sfc": "^3.5.43",
+    "@vue/shared": "^3.5.43",
     "pug": "^3.0.2",
-    "typescript": "^5.8.3",
-    "vite": "^6.3.1",
-    "vitest": "^3.1.1"
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4"
   },
   "dependencies": {
-    "@babel/parser": "8.0.0-alpha.17",
-    "@babel/traverse": "8.0.0-alpha.17",
-    "@babel/types": "8.0.0-alpha.17",
-    "html5parser": "^2.0.2"
+    "@babel/parser": "8.0.7",
+    "@babel/traverse": "8.0.7",
+    "@babel/types": "8.0.6",
+    "html5parser": "^3.0.0"
   },
   "optionalDependencies": {
-    "pug": "^3.0.3"
+    "pug": "^3.0.3",
+    "pug-lexer": "^5.0.1"
   },
   "peerDependencies": {
     "@vue/compiler-sfc": "^3.0.0",

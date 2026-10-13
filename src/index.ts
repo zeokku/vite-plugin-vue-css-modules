@@ -1,3 +1,5 @@
+import fs from "node:fs/promises";
+
 import { Plugin, CSSModulesOptions } from "vite";
 
 import {
@@ -12,31 +14,35 @@ import { transformScript } from "./transformScript.js";
 
 // import type { Options as TPugOptions } from "pug";
 
-interface TPluginOptions {
+interface ICssModulesPluginOptions {
   /**
    * String to use as a prefix for skipping transformation of names. The prefix is removed in the resulting code.
+   *
+   * @default "--"
    */
   preservePrefix: string;
   /**
-   * You can use `$cssModule.className` macro, which will be statically replaced in your script with the resulting CSS module name if this flag is `true` (default).
+   * You can use `$cssModule.className` macro, which will be statically replaced in your script with the resulting CSS module name if this flag is `true`.
+   *
+   * @default true
    */
   scriptTransform: boolean;
   /**
-   * Function returning a unique name for a unique input. It must maintain its internal state to return the same result for subsequent calls with identical input
+   * Function returning a unique name for a unique input. It must maintain its internal state to return the same result for subsequent calls with identical input.
+   *
+   * @default process.env.NODE_ENV === "production" ? prodNameGeneratorContext() : devNameGeneratorContext()
    */
   nameGenerator: Exclude<CSSModulesOptions["generateScopedName"], string>;
 }
 
 type TLocalNameGenerator = (name: string) => string;
 
-export interface TLocalTransformOptions {
+export interface ILocalTransformOptions {
   preservePrefix: string;
   localNameGenerator: TLocalNameGenerator;
   module?: string | false;
 }
 
-//@todo or switch to command === "build" ?
-const IS_DEVELOPMENT = process.env.NODE_ENV !== "production";
 /**
  * @param options Object with optional properties
  *
@@ -45,12 +51,12 @@ const IS_DEVELOPMENT = process.env.NODE_ENV !== "production";
 function plugin({
   preservePrefix = "--",
   scriptTransform = true,
-  nameGenerator = IS_DEVELOPMENT
-    ? devNameGeneratorContext()
-    : prodNameGeneratorContext(),
-}: Partial<TPluginOptions> = {}): Plugin {
+  nameGenerator = process.env.NODE_ENV === "production"
+    ? prodNameGeneratorContext()
+    : devNameGeneratorContext(),
+}: Partial<ICssModulesPluginOptions> = {}): Plugin {
   return {
-    name: "Vue CSS Modules",
+    name: "vue-css-modules",
 
     // execute hooks before vue() plugin
     enforce: "pre",
@@ -67,111 +73,129 @@ function plugin({
       };
     },
 
-    transform(code, id) {
-      if (id.match(/\.vue$/)) {
-        // @note normalize line endings to avoid offset issues working with pug lexer...
-        code = code.replace(/\r\n/g, "\n");
+    async transform(code, id) {
+      const [filename, queryString] = id.split("?");
 
-        const {
-          descriptor: { template, script, scriptSetup, styles },
-        } = sfcParse(code);
+      if (!filename.match(/\.vue$/)) return;
 
-        const styleModule = styles.find(s => s.module);
-        const styleModuleName =
-          typeof styleModule?.module === "string"
-            ? styleModule.module
-            : "$style";
+      // {vue: '', type: 'template', lang.js: ''}
+      const query = new URLSearchParams(queryString);
 
-        // @note skip if there's no style modules and template is not marked for processing
-        if (!styleModule && !template.attrs["css-modules"]) {
-          return;
-        }
+      // .vue?vue&type=template&lang.js
+      const isTemplateModule = query.get("type") === "template";
+      // @note on full SFC update query is empty
+      const isFullSfcUpdate = queryString === undefined;
 
-        const localNameGenerator = (name: string) =>
-          nameGenerator(name, id, styleModule?.content ?? "");
+      // @note exit early on other virtual modules (like styles which are processed in a separate plugin)
+      if (!isTemplateModule && !isFullSfcUpdate) return;
 
-        const sfcTransform = new MagicString(code);
+      const {
+        descriptor: { template, script, scriptSetup, styles },
+      } = sfcParse(
+        isTemplateModule
+          ? // @note Re-read from disk, so it's fresh on HMR. We need full SFC descriptor to decide whether we need to transform template
+            await fs.readFile(filename, "utf8")
+          : code
+      );
 
-        if (template) {
-          // @note undefined means html as well
-          template.lang ??= "html";
+      const styleModule = styles.find(s => s.module);
+      const styleModuleName =
+        typeof styleModule?.module === "string" ? styleModule.module : "$style";
 
-          switch (template.lang) {
-            case "pug":
-              {
-                transformPug(
-                  template.content,
-                  template.loc.start.offset,
-                  sfcTransform,
-                  {
-                    preservePrefix,
-                    localNameGenerator,
-                    module: scriptTransform ? false : styleModuleName,
-                  }
-                );
-              }
-              break;
+      // @note skip if there's no style modules and template is not marked for processing
+      if (!styleModule && !template?.attrs["css-modules"]) {
+        return;
+      }
 
-            case "html":
-              {
-                transformHtml(
-                  template.content,
-                  template.loc.start.offset,
-                  sfcTransform,
-                  {
-                    preservePrefix,
-                    localNameGenerator,
-                    module: scriptTransform ? false : styleModuleName,
-                  }
-                );
-              }
-              break;
+      const localNameGenerator = (name: string) =>
+        nameGenerator!(name, filename, styleModule?.content ?? "");
 
-            default:
-              console.warn(
-                `[CSS Modules] Unsupported template language "${template.lang}"! Skipped`
-              );
+      const codeTransform = new MagicString(code);
 
-              return;
-          }
-        }
+      // @note update template only when its corresponding virtual module is being loaded
+      // @note this way we avoid double parsing and transform of template on full SFC load (initial vite startup and when script is changed)
+      if (isTemplateModule) {
+        // @note undefined means html as well
+        template!.lang ??= "html";
 
-        if (scriptTransform) {
-          if (scriptSetup) {
-            transformScript(
-              scriptSetup.content,
-              scriptSetup.loc.start.offset,
-              sfcTransform,
-              localNameGenerator
+        const templateContent = code;
+        const templateStart = 0;
+
+        switch (template!.lang) {
+          case "pug":
+            {
+              transformPug(templateContent, templateStart, codeTransform, {
+                preservePrefix,
+                localNameGenerator,
+                module: scriptTransform ? false : styleModuleName,
+              });
+            }
+            break;
+
+          case "html":
+            {
+              transformHtml(templateContent, templateStart, codeTransform, {
+                preservePrefix,
+                localNameGenerator,
+                module: scriptTransform ? false : styleModuleName,
+              });
+            }
+            break;
+
+          default:
+            console.warn(
+              `[CSS Modules] Unsupported template language "${
+                template!.lang
+              }"! Skipped`
             );
-          }
 
-          if (script) {
-            transformScript(
-              script.content,
-              script.loc.start.offset,
-              sfcTransform,
-              localNameGenerator
-            );
-          }
+            return;
         }
 
         return {
-          code: sfcTransform.toString(),
-          map: sfcTransform.generateMap({
+          code: codeTransform.toString(),
+          map: codeTransform.generateMap({
+            hires: "boundary",
+            includeContent: true,
+          }),
+        };
+      }
+
+      if (isFullSfcUpdate && scriptTransform) {
+        if (scriptSetup) {
+          transformScript(
+            scriptSetup.content,
+            scriptSetup.loc.start.offset,
+            codeTransform,
+            localNameGenerator
+          );
+        }
+
+        if (script) {
+          transformScript(
+            script.content,
+            script.loc.start.offset,
+            codeTransform,
+            localNameGenerator
+          );
+        }
+
+        return {
+          code: codeTransform.toString(),
+          map: codeTransform.generateMap({
             hires: "boundary",
             includeContent: true,
           }),
         };
       }
     },
-  } satisfies Plugin;
+  };
 }
 
 export {
   plugin as default, //
-  plugin as cssm,
-  type TPluginOptions,
+  plugin as cssModules,
+  type ICssModulesPluginOptions,
 };
 
 export {
@@ -180,6 +204,6 @@ export {
 };
 
 export {
-  removeCssModulesChunk, //
-  type TRemoveCssModulesChunkOptions,
-} from "./removeCssModulesChunk.js";
+  removeCssModuleExports,
+  type IRemoveCssModuleExportsOptions,
+} from "./removeCssModuleExports.js";

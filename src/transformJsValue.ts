@@ -4,7 +4,7 @@ import * as babelTypes from "@babel/types";
 
 import type { MagicString } from "@vue/compiler-sfc";
 
-import type { TLocalTransformOptions } from "./";
+import type { ILocalTransformOptions } from "./index.js";
 import { parseQuotedValue } from "./shared.js";
 
 type TQuote = "'" | '"' | "" | "`" | undefined;
@@ -19,15 +19,15 @@ const quoteRotation = (attributeQuote: TQuote) => {
 
 const generateModuleAccess = (
   path: NodePath<babelTypes.Identifier>,
-  module: string | false,
+  module: string | false | undefined,
   contentOffset: number,
   sfcTransform: MagicString
 ) => {
   if (module) {
     const { node } = path;
     const { range } = node;
-    const startOffset = contentOffset + range[0] - 1;
-    const endOffset = contentOffset + range[1] - 1;
+    const startOffset = contentOffset + range![0] - 1;
+    const endOffset = contentOffset + range![1] - 1;
 
     sfcTransform.update(startOffset, endOffset, `${module}[${node.name}]`);
   }
@@ -38,7 +38,7 @@ export const transformJsValue = (
   contentOffset: number,
   sfcTransform: MagicString,
   attributeQuote: TQuote,
-  { preservePrefix, localNameGenerator, module }: TLocalTransformOptions
+  { preservePrefix, localNameGenerator, module }: ILocalTransformOptions
 ) => {
   // @note wrap in (...) to serve as root element during traversal, because traverse accepts parent node which won't be processed
   let ast = babelParser.parse(`(${source})`, {
@@ -78,8 +78,8 @@ export const transformJsValue = (
           // { 'b': 1 } will be processed in StringLiteral
         } else {
           const { range } = node;
-          const startOffset = contentOffset + range[0] - 1;
-          const endOffset = contentOffset + range[1] - 1;
+          const startOffset = contentOffset + range![0] - 1;
+          const endOffset = contentOffset + range![1] - 1;
 
           // @note CAN HAPPEN! e.g. `{ $escaped: toggle }` prefixes can be symbols which are allowed in unquoted properties (identifiers)
           if (node.name.startsWith(preservePrefix)) {
@@ -123,13 +123,13 @@ export const transformJsValue = (
       const { value } = parseQuotedValue(node.extra!.raw as string);
 
       // prettier-ignore
-      const startOffset = contentOffset + node.range[0]
+      const startOffset = contentOffset + node.range![0]
       // @note skip (
       - 1
       // @note offset quote  
       + 1;
 
-      const endOffset = contentOffset + node.range[1] - 1 - 1;
+      const endOffset = contentOffset + node.range![1] - 1 - 1;
 
       if (value.startsWith(preservePrefix)) {
         sfcTransform.update(
@@ -146,8 +146,8 @@ export const transformJsValue = (
     TemplateElement(path) {
       let { node } = path;
 
-      const startOffset = contentOffset + node.range[0] - 1;
-      const endOffset = contentOffset + node.range[1] - 1;
+      const startOffset = contentOffset + node.range![0] - 1;
+      const endOffset = contentOffset + node.range![1] - 1;
 
       sfcTransform.update(
         startOffset,

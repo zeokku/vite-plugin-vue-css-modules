@@ -1,14 +1,14 @@
 import type { MagicString } from "@vue/compiler-sfc";
 import { parse, SyntaxKind, walk } from "html5parser";
 
-import { TLocalTransformOptions } from "./index.js";
+import { ILocalTransformOptions } from "./index.js";
 import { transformJsValue } from "./transformJsValue.js";
 
 export const transformHtml = (
   source: string,
   contentOffset: number,
   sfcTransform: MagicString,
-  { preservePrefix, localNameGenerator, module }: TLocalTransformOptions
+  { preservePrefix, localNameGenerator, module }: ILocalTransformOptions
 ) => {
   const ast = parse(source);
 
