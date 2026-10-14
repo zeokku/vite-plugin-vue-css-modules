@@ -55,6 +55,8 @@ function plugin({
     ? prodNameGeneratorContext()
     : devNameGeneratorContext(),
 }: Partial<ICssModulesPluginOptions> = {}): Plugin {
+  let isBuild = false;
+
   return {
     name: "vue-css-modules",
 
@@ -71,6 +73,10 @@ function plugin({
           },
         },
       };
+    },
+
+    configResolved(config) {
+      isBuild = config.command === "build";
     },
 
     async transform(code, id) {
@@ -114,12 +120,13 @@ function plugin({
 
       // @note update template only when its corresponding virtual module is being loaded
       // @note this way we avoid double parsing and transform of template on full SFC load (initial vite startup and when script is changed)
-      if (isTemplateModule) {
+      // @note but during build virtual template module is not generated, so handle that also
+      if (isTemplateModule || (isBuild && template)) {
         // @note undefined means html as well
         template!.lang ??= "html";
 
-        const templateContent = code;
-        const templateStart = 0;
+        const templateContent = isTemplateModule ? code : template!.content;
+        const templateStart = isTemplateModule ? 0 : template!.loc.start.offset;
 
         switch (template!.lang) {
           case "pug":
@@ -151,14 +158,6 @@ function plugin({
 
             return;
         }
-
-        return {
-          code: codeTransform.toString(),
-          map: codeTransform.generateMap({
-            hires: "boundary",
-            includeContent: true,
-          }),
-        };
       }
 
       if (isFullSfcUpdate && scriptTransform) {
@@ -179,15 +178,15 @@ function plugin({
             localNameGenerator
           );
         }
-
-        return {
-          code: codeTransform.toString(),
-          map: codeTransform.generateMap({
-            hires: "boundary",
-            includeContent: true,
-          }),
-        };
       }
+
+      return {
+        code: codeTransform.toString(),
+        map: codeTransform.generateMap({
+          hires: "boundary",
+          includeContent: true,
+        }),
+      };
     },
   };
 }
