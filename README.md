@@ -6,16 +6,24 @@
 
 ⚡ **The ultimate solution** for using **CSS modules** with zero friction.
 
-Automatic static replacement of class names and IDs in Vue templates and scripts. Write plain class names: no `$style`, no imports, no special syntax.
+Automatic static replacement of class names and IDs in Vue templates and scripts. Write plain class names: no `$style`, no imports, no special syntax. In production, you get CSS minification and class name mangling like Facebook and Google use, plus extra size savings, because your stylesheets and templates no longer need `[data-v-xxx]` attributes for scoping.
+
+```vue
+<template lang="pug">
+.button
+  .title
+</template>
+
+<style module lang="scss">
+.button { ... }
+.title { ... }
+</style> 
+```
 
 ## Installation
 
 ```sh
 pnpm add -D vite-plugin-vue-css-modules
-# or
-yarn add -D vite-plugin-vue-css-modules
-# or
-npm i -D vite-plugin-vue-css-modules
 ```
 
 ## Usage
