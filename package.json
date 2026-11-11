@@ -16,7 +16,7 @@
     "build": "tsc",
     "watch": "tsc --watch",
     "test:static": "node ./test",
-    "test:watch": "vitest",
+    "test": "vitest",
     "test:watch": "vitest --watch"
   },
   "files": [
