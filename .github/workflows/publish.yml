@@ -46,4 +46,4 @@ jobs:
         run: pnpm run build
 
       - name: Publish with provenance
-        run: npm publish --provenance
+        run: npm stage publish --provenance
