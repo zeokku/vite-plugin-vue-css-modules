@@ -39,10 +39,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: pnpm run build --if-present
+        run: pnpm run build
 
       - name: Test
-        run: pnpm test --if-present
+        run: pnpm test
 
       - name: Publish with provenance
-        run: npm publish
+        run: npm publish --provenance
