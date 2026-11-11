@@ -38,11 +38,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: pnpm run build
-
       - name: Test
         run: pnpm test
+        
+      - name: Build
+        run: pnpm run build
 
       - name: Publish with provenance
         run: npm publish --provenance
